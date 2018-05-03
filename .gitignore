@@ -99,3 +99,9 @@ ENV/
 
 # mypy
 .mypy_cache/
+
+# ignore ide settings
+.idea/
+
+# ignore scripts from virtual env
+Scripts/
