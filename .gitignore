@@ -105,3 +105,4 @@ ENV/
 
 # ignore scripts from virtual env
 Scripts/
+state-space-estimation-runner/
