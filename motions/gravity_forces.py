@@ -108,7 +108,7 @@ def _update_gravity_info(g_info: CelestialBodyGravityInfo, acceleration: np.ndar
         lambda t, x: uniform_acceleration_motion_equation(x, acceleration),
         [0, dt],
         np.hstack((g_info.kinematic_state.position, g_info.kinematic_state.velocity)),
-        method=LSODA
+        method="LSODA"
     )
     # todo check and uncomment if it works fine
     # velocity = g_info.kinematic_state.velocity + acceleration * dt

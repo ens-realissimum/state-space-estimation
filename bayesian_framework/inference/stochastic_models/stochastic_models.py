@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import collections
 from abc import ABC, abstractmethod
-from typing import NoReturn, Tuple
+from typing import NoReturn, Tuple, Union
 
 import numpy as np
 from scipy.stats import gamma, multivariate_normal
@@ -86,6 +86,14 @@ class GeneralStochasticModel(ABC):
 
     def update(self, **kwargs) -> NoReturn:
         pass
+
+    @property
+    def n_components(self) -> int:
+        return 0
+
+    @property
+    def weights(self) -> Union[np.ndarray, None]:
+        return None
 
 
 class GammaStochasticModel(GeneralStochasticModel):

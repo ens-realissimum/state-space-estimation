@@ -11,16 +11,6 @@ import bayesian_framework.inference.stochastic_models.tests.stochastic_models_te
 
 
 class TestGammaStochasticModel:
-    def test__likelihood__samples_not_specified__raise_error(self):
-        gamma_model = utils.build_gamma()
-        with raises(TypeError):
-            gamma_model.likelihood()
-
-    def test__likelihood__samples_is_none__raise_error(self):
-        gamma_model = utils.build_gamma()
-        with raises(Exception, match="<samples> should be n-dim numpy array"):
-            gamma_model.likelihood(None)
-
     def test__likelihood__samples_specified__equal_to_gamma_pdf(self):
         shape = random()
         scale = random()
@@ -30,16 +20,6 @@ class TestGammaStochasticModel:
         actual_likelihood = gamma_model.likelihood(samples)
         expected_likelihood = gamma.pdf(samples.T, shape, scale=scale)
         assert_array_almost_equal(actual_likelihood, expected_likelihood, decimal=3)
-
-    def test__sample__size_not_specified__raise_error(self):
-        gamma_model = utils.build_gamma()
-        with raises(TypeError):
-            gamma_model.sample()
-
-    def test__sample__size_is_none__raise_error(self):
-        gamma_model = utils.build_gamma()
-        with raises(Exception, match="<size> is mandatory but was not specified"):
-            gamma_model.sample(None)
 
     def test__sample__size_is_zero__raise_error(self):
         gamma_model = utils.build_gamma()
@@ -96,16 +76,6 @@ class TestGammaStochasticModel:
 
 
 class TestGaussianStochasticModel:
-    def test__likelihood__samples_not_specified__raise_error(self):
-        gauss_model = utils.build_gauss()
-        with raises(TypeError):
-            gauss_model.likelihood()
-
-    def test__likelihood__samples_is_none__raise_error(self):
-        gauss_model = utils.build_gauss()
-        with raises(Exception, match="<samples> should be n-dim numpy array"):
-            gauss_model.likelihood(None)
-
     def test__likelihood__samples_specified__equal_to_gauss_pdf(self):
         mean = np.random.random(size=(3,))
         std_cov = np.random.random(size=(3, 3))
@@ -139,12 +109,11 @@ class TestGaussianMixtureStochasticModel:
         assert_equal(samples.shape, expected_shape)
 
     def test__from_gaussian__gaussian_process_specified__must_be_created_with_same_cov_mean_cov_type(self):
-        dim = 3
         gauss_model = utils.build_gauss()
 
         gmm = sm.GaussianMixtureStochasticModel.from_gaussian(gauss_model)
 
-        assert_equal(gmm.covariance_type, gauss_model.covariance_type)
+        assert gmm.covariance_type == gauss_model.covariance_type
         assert_equal(gmm.dim, gauss_model.dim)
 
         # mix contains only 1 item, hence ignore dim related to  mixture size as it's always equal to 1

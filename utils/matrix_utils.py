@@ -1,7 +1,7 @@
 from typing import Iterable, Union
 
 import numpy as np
-import quaternion as np_quaternion
+import quaternion as npq
 
 
 def put_matrices_into_zero_matrix_one_by_one(dimension: int, matrix_list: Iterable[np.ndarray]) -> np.array:
@@ -21,7 +21,7 @@ def put_matrices_into_zero_matrix_one_by_one(dimension: int, matrix_list: Iterab
 
 
 def is_square_2d_array(matrix: Iterable) -> bool:
-    if np.ndim(matrix) is not 2:
+    if np.ndim(matrix) != 2:
         return False
 
     (row_size, column_size) = np.shape(matrix)
@@ -91,43 +91,6 @@ def cholesky_update(a: np.ndarray, x: np.ndarray, sign: str) -> np.ndarray:
         x[k + 1:p] = c * x[k + 1:p] - s * result[k, k + 1:p]
     return result
 
-    # res = a.copy()
-    #
-    # if sign == '+':
-    #     cholupdate(res, x.copy())
-    # elif sign == '-':
-    #     choldowndate(res, x.copy())
-    # else:
-    #     raise Exception("unknown value of sign. sign = {0}".format(sign))
-
-    return res
-
-    # p = np.size(x)
-    # x = x.T
-    #
-    # res = a.copy()
-    #
-    # for k in range(p):
-    #     if sign == '+':
-    #         r = np.sqrt(res[k, k] ** 2 + x[k] ** 2)
-    #     elif sign == '-':
-    #         r = np.sqrt(res[k, k] ** 2 - x[k] ** 2)
-    #     else:
-    #         raise Exception("unknown value of sign. sign = {0}".format(sign))
-    #
-    #     c = r / res[k, k]
-    #     s = x[k] / res[k, k]
-    #     res[k, k] = r
-    #
-    #     if sign == '+':
-    #         res[k, k + 1:p] = (res[k, k + 1:p] + s * x[k + 1:p]) / c
-    #     elif sign == '-':
-    #         res[k, k + 1:p] = (res[k, k + 1:p] - s * x[k + 1:p]) / c
-    #
-    #     x[k + 1:p] = c * x[k + 1:p] - s * res[k, k + 1:p]
-    #
-    # return res
-
 
 def cartesian_product(*arrays):
     """
@@ -152,13 +115,13 @@ def get_shape_at(array: np.ndarray, axis: int, default: Union[int, None] = None)
     return default if shape_item is None else shape_item
 
 
-def vect_to_quaternion(vect: np.ndarray) -> np_quaternion.quaternion:
+def vect_to_quaternion(vect: np.ndarray) -> npq.quaternion:
     """
     Convert 3D vector to quaternion representation.
     :param vect: 3D vector (with components x, y, z)
     :return: quaternion representation of input vector
     """
-    return np_quaternion.quaternion(0, vect[0], vect[1], vect[2])
+    return npq.quaternion(0, vect[0], vect[1], vect[2])
 
 
 def get_locked_copy(arr: np.ndarray) -> np.ndarray:

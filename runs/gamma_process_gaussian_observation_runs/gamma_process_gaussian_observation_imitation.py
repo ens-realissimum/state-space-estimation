@@ -15,11 +15,11 @@ from utils.stat_utils import stat_errors
 
 def run():
     # todo: check dim of return between different numeric methods
-    gh_points, gh_weights = num_cmp.eval_gauss_hermite_rule(4, 3)
+    # gh_points, gh_weights = num_cmp.eval_gauss_hermite_rule(4, 3)
     # todo: fix generate_sparse_gauss_hermite_points
     # sgh_points, sgh_weights = num_cmp.generate_sparse_gauss_hermite_points(2, 3, 2)
 
-    filter_types = [BayesianFilterType.gspf]  # todo: fix sghqf
+    filter_types = [BayesianFilterType.sghqf]  # todo: fix sghqf
     # [kf, ekf, ukf, srukf, cdkf, srcdkf, ckf, srckf, fdckf, cqkf, ghqf, sghqf, pf, gspf ??,  ]
 
     number_of_runs = 100  # 500
@@ -73,6 +73,8 @@ def run():
                     spkf = b_filters.Cqkf(order=9)
                 elif filter_type is BayesianFilterType.ghqf:
                     spkf = b_filters.Ghqf(order=11)
+                elif filter_type is BayesianFilterType.sghqf:
+                    spkf = b_filters.Sghqf(order=11, manner=3)
                 elif filter_type is BayesianFilterType.kf:
                     spkf = b_filters.Kf()
                 elif filter_type is BayesianFilterType.ekf:
@@ -123,7 +125,7 @@ def run():
             else:
                 raise Exception("Not supported filter type: {0}".format(filter_type.name))
 
-            if draw_iterations and i is 1:
+            if draw_iterations and i == 1:
                 ax_a.plot(np.squeeze(x), linewidth=2.0, label="clean", linestyle="dashed")
                 ax_a.plot(np.squeeze(z), linewidth=2.0, label="noisy", linestyle="dotted")
                 ax_a.plot(np.squeeze(x_est), linewidth=2.0, label="{0} estimate".format(filter_type.name))
@@ -152,6 +154,6 @@ def run():
 
         fig2, ax2 = plt.subplots()
         ax2.plot(rmse_x_err, color="g", linewidth=2.0)
-        ax2.set_title("{}: RMSE (non Gaussian noise)".format(filter_type.name), fontsize=12)
+        ax2.set_title("{0}: RMSE (non Gaussian noise)".format(filter_type.name), fontsize=12)
         ax2.grid(True, which="both", axis="both")
         fig2.show()

@@ -136,9 +136,3 @@ def eval_moon_influence(t_epoch, state: KinematicState) -> np.ndarray:
         mu_norm_moon * ((etta_moon - y_norm_moon) / delta_moon ** 3 - etta_moon),
         mu_norm_moon * ((f_moon - z_norm_moon) / delta_moon ** 3 - f_moon),
     ])
-
-
-#  todo: should be solver (class or function) that will solve problem on whole interval
-def solve_orbital_motion_equation(time_span: np.ndarray, state: KinematicState, acceleration: np.ndarray,
-                                  gravity_acceleration: np.ndarray, angular_velocity: np.ndarray) -> KinematicState:
-    pass

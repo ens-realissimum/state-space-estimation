@@ -1,5 +1,5 @@
 from copy import deepcopy
-from typing import List
+from typing import Iterable, List
 
 import numpy as np
 import quaternion as npq
@@ -13,7 +13,7 @@ class KinematicState:
         Quaternion that represent angular position according to inertial frame.
     """
 
-    def __init__(self, position: List[float], velocity: List[float], quaternion: npq.quaternion):
+    def __init__(self, position: Iterable[float], velocity: Iterable[float], quaternion: npq.quaternion):
         """
         Creates new instance of KinematicState.
         :param position: position vector (cartesian coordinates), [km].

@@ -325,7 +325,6 @@ def generate_sparse_gauss_hermite_point(accuracy_level: int, idx: np.ndarray, po
         points, weights = get_one_dim_sparse_gauss_hermite_point(idx[0], point_set[0], manner)
         points = points.T
         weights = np.atleast_2d(weights).T
-        num_pt = np.size(weights)
 
         for i in range(1, dim):
             npt, nw = get_one_dim_sparse_gauss_hermite_point(idx[i], point_set[i], manner)

@@ -390,7 +390,7 @@ class Ukf(LocalApproximationKalmanFilter):
     def eval_x_cov_predicted(self, w: np.ndarray, x_centered: np.ndarray) -> np.ndarray:
         return w[2] * x_centered[:, 0] @ x_centered[:, 0].T + w[1] * x_centered[:, 1:] @ x_centered[:, 1:].T
 
-    def eval_sigma_points_offset(self, augment_dim: np.ndarray, cov_state: np.ndarray, model: StateSpaceModel) -> np.ndarray:
+    def eval_sigma_points_offset(self, augment_dim: int, cov_state: np.ndarray, model: StateSpaceModel) -> np.ndarray:
         return m_utils.put_matrices_into_zero_matrix_one_by_one(
             augment_dim, [
                 np.linalg.cholesky(cov_state),
@@ -430,9 +430,7 @@ class SrUkf(Ukf):
     """
 
     def __init__(self, alpha, beta, kappa):
-        self._alpha = alpha
-        self._beta = beta
-        self._kappa = kappa
+        super().__init__(alpha, beta, kappa)
 
     def __str__(self):
         return "SRUKF: alpha: {0}; beta: {1}; kappa: {2}".format(self._alpha, self._beta, self._kappa)
@@ -465,7 +463,7 @@ class SrUkf(Ukf):
         _, x_cov_predicted = np.linalg.qr((sqrt_w[1] * x_centered[:, 1:]).T)
         return m_utils.cholesky_update(x_cov_predicted, sqrt_w[2] * x_centered[:, 0], "+" if w[2] > 0 else "-")
 
-    def eval_sigma_points_offset(self, augment_dim: np.ndarray, cov_state: np.ndarray, model: StateSpaceModel) -> np.ndarray:
+    def eval_sigma_points_offset(self, augment_dim: int, cov_state: np.ndarray, model: StateSpaceModel) -> np.ndarray:
         return m_utils.put_matrices_into_zero_matrix_one_by_one(
             augment_dim, [
                 cov_state,
@@ -552,7 +550,6 @@ class Cdkf(LocalApproximationKalmanFilter):
         w_z = w_x.copy()
         w_z[0, 0] = (scale_factor_square - x_dim - n_dim) / scale_factor_square
 
-        sigma_set_size_x = 2 * (x_dim + v_dim) + 1
         sigma_set_size_z = 2 * (x_dim + n_dim) + 1
 
         # Generate sigma points for the state
@@ -611,7 +608,12 @@ class Cdkf(LocalApproximationKalmanFilter):
         return state_new, state_cov_new, internal_vars
 
     @staticmethod
-    def eval_prediction(predicted_points: np.ndarray, noise_dim: int, model: StateSpaceModel, weights: np.ndarray) -> np.ndarray:
+    def eval_prediction(
+            predicted_points: np.ndarray,
+            noise_dim: int,
+            model: StateSpaceModel,
+            weights: np.ndarray
+    ) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
         x_dim = model.state_dim
         mean_predicted = weights[0, 0] * predicted_points[:, 0] + weights[0, 1] * np.sum(predicted_points[:, 1:], axis=1)
         x1 = weights[1, 0] * (predicted_points[:, 1:x_dim + noise_dim + 1] - predicted_points[:, x_dim + noise_dim + 1:])
@@ -660,7 +662,7 @@ class SrCdkf(Cdkf):
     """
 
     def __init__(self, scale_factor):
-        self._scale_factor = scale_factor
+        super().__init__(scale_factor)
 
     def __str__(self):
         return "SR CDKF. Scale factor: {0}".format(self._scale_factor)
@@ -750,7 +752,7 @@ class Ckf(LocalApproximationKalmanFilter):
         # Propagate state cubature points through state model
         x_predicted = model.transition_func(cubature_set_x, np.tile(model.state_noise.mean, (1, cubature_set_size)), ctrl_x)
         x_mean_predicted = np.sum(x_predicted, axis=1) / cubature_set_size
-        x_cov_predicted = self.eval_x_cov_predicted(cubature_set_size, model, x_mean_predicted, x_predicted)
+        x_cov_predicted = self.eval_x_cov_predicted(cubature_set_size, x_mean_predicted, x_predicted)
 
         # Generate cubature points for the observations
         offset_z = self.eval_offset_z(cubature_set_size, x_cov_predicted)
@@ -802,10 +804,10 @@ class Ckf(LocalApproximationKalmanFilter):
         z_cov_predicted = z @ z.T + model.observation_noise.covariance
         return z_cov_predicted
 
-    def eval_offset_z(self, cubature_set_size: np.ndarray, x_cov_predicted: np.ndarray) -> np.ndarray:
+    def eval_offset_z(self, cubature_set_size: int, x_cov_predicted: np.ndarray) -> np.ndarray:
         return m_utils.sqrt_decomposition_via_svd(x_cov_predicted) * np.sqrt(cubature_set_size / 2)
 
-    def eval_x_cov_predicted(self, cubature_set_size: int, model: np.ndarray, x_mean_predicted: np.ndarray, x_predicted: np.ndarray) -> np.ndarray:
+    def eval_x_cov_predicted(self, cubature_set_size: int, model: StateSpaceModel, x_mean_predicted: np.ndarray, x_predicted: np.ndarray) -> np.ndarray:
         x_predicted_centered = (x_predicted - np.tile(x_mean_predicted, (1, cubature_set_size))) / np.sqrt(cubature_set_size)
         x_cov_predicted = x_predicted_centered @ x_predicted_centered.T + model.state_noise.covariance
         return x_cov_predicted
@@ -838,7 +840,7 @@ class SrCkf(Ckf):
     """
 
     def __init__(self):
-        pass
+        super().__init__()
 
     def __str__(self):
         return "SR Cubature Kalman Filter"
@@ -866,7 +868,7 @@ class SrCkf(Ckf):
     def eval_offset_z(self, cubature_set_size: np.ndarray, x_cov_predicted: np.ndarray) -> np.ndarray:
         return x_cov_predicted * np.sqrt(cubature_set_size / 2)
 
-    def eval_x_cov_predicted(self, cubature_set_size: int, model: np.ndarray, x_mean_predicted: np.ndarray, x_predicted: np.ndarray) -> np.ndarray:
+    def eval_x_cov_predicted(self, cubature_set_size: int, model: StateSpaceModel, x_mean_predicted: np.ndarray, x_predicted: np.ndarray) -> np.ndarray:
         x_weighted_centered_set = (x_predicted - np.tile(x_mean_predicted, (1, cubature_set_size))) / np.sqrt(cubature_set_size)
         _, x_cov_predicted_sqrt = np.linalg.qr(np.hstack((x_weighted_centered_set, model.state_noise.covariance)).T)
         return x_cov_predicted_sqrt.T
@@ -1006,7 +1008,7 @@ class FdCkf(HdLkf):
     def eval_set_size(self, model: StateSpaceModel) -> Tuple[np.ndarray, np.ndarray]:
         return 2 * model.state_dim ** 2 + 1
 
-    def evaluate_points_and_weights(self, model: StateSpaceModel) -> int:
+    def evaluate_points_and_weights(self, model: StateSpaceModel) -> Tuple[np.ndarray, np.ndarray]:
         return num_computations.eval_fifth_degree_cubature_rule(model.state_dim)
 
 
@@ -1121,7 +1123,14 @@ class Sghqf(HdLkf):
         manner - increase manner: L, 2*L-1, 2^L-1.
     """
 
-    def __init__(self, order, manner):
+    def __init__(self, order: int, manner: int):
+        """
+
+        Parameters
+        ----------
+        order : int
+        manner : int
+        """
         self._order = order
         self._manner = manner
 
@@ -1326,7 +1335,7 @@ class Pf(PdfApproximationKalmanFilter):
         self._resample_strategy = resample_strategy if resample_strategy is not None else ResidualResampleStrategy()
 
     def __str__(self):
-        return "Resample threshold: {}; Estimate type: {1}; Resampling method: {2}".format(
+        return "Resample threshold: {0}; Estimate type: {1}; Resampling method: {2}".format(
             self._resample_threshold,
             self._estimate_type,
             self._resample_strategy
@@ -1456,7 +1465,7 @@ class Gspf:
         self._resample_strategy = resample_strategy if resample_strategy is not None else ResidualResampleStrategy()
 
     def __str__(self):
-        return "Resample threshold: {}; Estimate type: {1}; Resampling method: {2}; Particles count".format(
+        return "Resample threshold: {0}; Estimate type: {1}; Resampling method: {2}; Particles count".format(
             self._resample_threshold,
             self._estimate_type,
             self._resample_strategy,
@@ -1495,7 +1504,7 @@ class Gspf:
         n_x_noise_components = model.state_noise.n_components
         n_components = n_x_components * n_x_noise_components
 
-        # sample buffer: (sample dimension) X(number of samples) X(number of mixcomps)
+        # sample buffer: (sample dimension) X(number of samples) X(number of mixture components)
         x_buf1 = np.zeros((n_x_components, x_dim, num))
         x_buf2 = np.zeros((n_components, x_dim, num))
         x_buf3 = np.zeros((n_components, x_dim, num))
@@ -1516,7 +1525,7 @@ class Gspf:
             for g in range(n_x_components):
                 gk = g + (k - 1) * n_x_components
                 x_noise_buf = model.state_noise.covariance[k, :, :] @ np.random.rand((model.state_dim, num)) + mean_components
-                x_buf2[gk, :, :] = model.transition_fun(x_buf1[g, :, :], x_noise_buf, ctrl_x)
+                x_buf2[gk, :, :] = model.transition_func(x_buf1[g, :, :], x_noise_buf, ctrl_x)
                 x_weights_new[gk] = gmm.weights_[g] * model.state_noise.weights[k]
 
         x_weights_new = x_weights_new / np.sum(x_weights_new)
@@ -1525,8 +1534,8 @@ class Gspf:
             mu1 = np.sum(x_buf2[g, :, :], 1) / num  # todo: check axis
             state_mean_new[g, :] = mu1
             mu1 = mu1[ones_num, :]
-            _, covFoo = np.linalg.qr(np.transpose(x_buf2[g, :, :] - mu1))
-            state_cov_new[g, :, :] = np.transpose(covFoo) / np.sqrt(num - 1)
+            _, cov_foo = np.linalg.qr(np.transpose(x_buf2[g, :, :] - mu1))
+            state_cov_new[g, :, :] = np.transpose(cov_foo) / np.sqrt(num - 1)
 
         # Observation / measurement update (correction)
         obs = observation[:, ones_num]

@@ -20,7 +20,7 @@ def to_full_covariance(cov: np.ndarray, source_cov_type: CovarianceType) -> np.n
 
 
 def to_mixture_full_covariance(cov: np.ndarray, source_cov_type: CovarianceType) -> np.ndarray:
-    is_mixture = cov.ndim is 3
+    is_mixture = cov.ndim == 3
     cov_list = cov if is_mixture else [cov]
 
     return np.asarray(
@@ -44,7 +44,7 @@ def to_sqrt_covariance(cov: np.ndarray, source_cov_type: CovarianceType) -> np.n
 
 
 def to_mixture_sqrt_covariance(cov: np.ndarray, source_cov_type: CovarianceType) -> np.ndarray:
-    is_mixture = cov.ndim is 3
+    is_mixture = cov.ndim == 3
     cov_list = cov if is_mixture else [cov]
 
     if is_mixture:

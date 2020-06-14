@@ -1,5 +1,6 @@
 # todo: consider sun and moon influence, should be part of non-gravity acceleration
 # todo: consider non-spherical part of gravity earth acceleration, should be part of gravity acceleration
+from typing import Tuple
 
 import numpy as np
 import quaternion as npq
@@ -37,7 +38,7 @@ def uniform_angular_motion_equation(quaternion: np.ndarray, angular_velocity: np
 
 
 def solve_kinematic_motion_equation(
-        time_span: np.ndarray,
+        time_span: Tuple[int, int],
         state: KinematicState,
         acceleration: np.ndarray,
         gravity_acceleration: np.ndarray,
@@ -65,7 +66,7 @@ def solve_kinematic_motion_equation(
     """
     acc = npq.rotate_vectors(state.quaternion, acceleration) + gravity_acceleration
     x0 = np.hstack((state.position, state.velocity))
-    x_new = solve_ivp(lambda t, x: uniform_acceleration_motion_equation(x, acc), time_span, x0, method=RK45)
-    q_new = solve_ivp(lambda t, q: uniform_angular_motion_equation(q, angular_velocity), time_span, state.quaternion.components, method=RK45)
+    x_new = solve_ivp(lambda t, x: uniform_acceleration_motion_equation(x, acc), time_span, x0, method="RK45")
+    q_new = solve_ivp(lambda t, q: uniform_angular_motion_equation(q, angular_velocity), time_span, state.quaternion.components, method="RK45")
 
     return KinematicState(x_new.y[:3, -1], x_new.y[3:, -1], npq.from_float_array(q_new.y[:, -1]).normalized())
