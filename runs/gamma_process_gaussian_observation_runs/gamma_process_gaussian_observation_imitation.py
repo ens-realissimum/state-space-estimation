@@ -3,7 +3,6 @@ import numpy as np
 from scipy.stats import multivariate_normal
 
 import bayesian_framework.filters as b_filters
-import bayesian_framework.shared.numerical_computations as num_cmp
 from bayesian_framework.bayesian_filter_type import BayesianFilterType, is_linear_kalman_filter, is_sigma_point_filter, is_sqrt_sigma_point_filter
 from bayesian_framework.inference.inference_model_generator import build_filterable_model
 from bayesian_framework.inference.stochastic_models.covariance_type import CovarianceType

@@ -1,5 +1,5 @@
 from copy import deepcopy
-from typing import Iterable, List
+from typing import Iterable
 
 import numpy as np
 import quaternion as npq

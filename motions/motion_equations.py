@@ -4,7 +4,7 @@ from typing import Tuple
 
 import numpy as np
 import quaternion as npq
-from scipy.integrate import RK45, solve_ivp
+from scipy.integrate import solve_ivp
 
 from motions.models import KinematicState
 from utils.matrix_utils import vect_to_quaternion
