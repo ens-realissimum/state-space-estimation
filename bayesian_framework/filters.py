@@ -752,7 +752,7 @@ class Ckf(LocalApproximationKalmanFilter):
         # Propagate state cubature points through state model
         x_predicted = model.transition_func(cubature_set_x, np.tile(model.state_noise.mean, (1, cubature_set_size)), ctrl_x)
         x_mean_predicted = np.sum(x_predicted, axis=1) / cubature_set_size
-        x_cov_predicted = self.eval_x_cov_predicted(cubature_set_size, x_mean_predicted, x_predicted)
+        x_cov_predicted = self.eval_x_cov_predicted(cubature_set_size, model,  x_mean_predicted, x_predicted)
 
         # Generate cubature points for the observations
         offset_z = self.eval_offset_z(cubature_set_size, x_cov_predicted)
