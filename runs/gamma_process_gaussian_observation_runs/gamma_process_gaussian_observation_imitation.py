@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from scipy.stats import multivariate_normal
 
-import bayesian_framework.filters as b_filters
+import bayesian_framework.filters as bf
 from bayesian_framework.bayesian_filter_type import BayesianFilterType, is_linear_kalman_filter, is_sigma_point_filter, is_sqrt_sigma_point_filter
 from bayesian_framework.inference.inference_model_generator import build_filterable_model
 from bayesian_framework.inference.stochastic_models.covariance_type import CovarianceType
@@ -18,7 +18,7 @@ def run():
     # todo: fix generate_sparse_gauss_hermite_points
     # sgh_points, sgh_weights = num_cmp.generate_sparse_gauss_hermite_points(2, 3, 2)
 
-    filter_types = [BayesianFilterType.sghqf]  # todo: fix sghqf
+    filter_types = [BayesianFilterType.srcdkf]  # todo: fix sghqf
     # [kf, ekf, ukf, srukf, cdkf, srcdkf, ckf, srckf, fdckf, cqkf, ghqf, sghqf, pf, gspf ??,  ]
 
     number_of_runs = 100  # 500
@@ -55,29 +55,29 @@ def run():
 
             if is_sigma_point_filter(filter_type) or is_linear_kalman_filter(filter_type):
                 if filter_type is BayesianFilterType.ukf:
-                    spkf = b_filters.Ukf(alpha=1, beta=2, kappa=0)
+                    spkf = bf.Ukf(alpha=1, beta=2, kappa=0)
                 elif filter_type is BayesianFilterType.srukf:
-                    spkf = b_filters.SrUkf(alpha=1, beta=2, kappa=0)
+                    spkf = bf.SrUkf(alpha=1, beta=2, kappa=0)
                 elif filter_type is BayesianFilterType.cdkf:
-                    spkf = b_filters.Cdkf(scale_factor=np.sqrt(3))
+                    spkf = bf.Cdkf(scale_factor=np.sqrt(3))
                 elif filter_type is BayesianFilterType.srcdkf:
-                    spkf = b_filters.SrCdkf(scale_factor=np.sqrt(3))
+                    spkf = bf.SrCdkf(scale_factor=np.sqrt(3))
                 elif filter_type is BayesianFilterType.ckf:
-                    spkf = b_filters.Ckf()
+                    spkf = bf.Ckf()
                 elif filter_type is BayesianFilterType.srckf:
-                    spkf = b_filters.SrCkf()
+                    spkf = bf.SrCkf()
                 elif filter_type is BayesianFilterType.fdckf:
-                    spkf = b_filters.FdCkf()
+                    spkf = bf.FdCkf()
                 elif filter_type is BayesianFilterType.cqkf:
-                    spkf = b_filters.Cqkf(order=9)
+                    spkf = bf.Cqkf(order=9)
                 elif filter_type is BayesianFilterType.ghqf:
-                    spkf = b_filters.Ghqf(order=11)
+                    spkf = bf.Ghqf(order=11)
                 elif filter_type is BayesianFilterType.sghqf:
-                    spkf = b_filters.Sghqf(order=11, manner=3)
+                    spkf = bf.Sghqf(order=11, manner=3)
                 elif filter_type is BayesianFilterType.kf:
-                    spkf = b_filters.Kf()
+                    spkf = bf.Kf()
                 elif filter_type is BayesianFilterType.ekf:
-                    spkf = b_filters.Ekf()
+                    spkf = bf.Ekf()
                 else:
                     raise Exception("Not supported filter type: {0}".format(filter_type.name))
 
@@ -88,12 +88,12 @@ def run():
                     x_est[:, k], x_cov_est, _ = spkf.estimate(x_est[:, k - 1], x_cov_est, z[:, k], inference_model, u1[k - 1], u2[k])
 
             elif filter_type is BayesianFilterType.pf:
-                resample_strategy = b_filters.ResampleStrategy.resolve(b_filters.ResampleType.residual)
-                pf = b_filters.Pf(0.1, resample_strategy=resample_strategy)
+                resample_strategy = bf.ResampleStrategy.resolve(bf.ResampleType.residual)
+                pf = bf.Pf(0.1, resample_strategy=resample_strategy)
                 n_particles = int(1e5)
                 particles = np.atleast_2d(multivariate_normal.rvs(x_est[:, 0], x_cov_est, n_particles))
                 weights = np.tile(1 / n_particles, n_particles)
-                data_set = b_filters.BootstrapDataSet(particles, weights)
+                data_set = bf.BootstrapDataSet(particles, weights)
 
                 for k in range(1, data_points_count):
                     x_est[:, k], data_set = pf.estimate(data_set, z[:, k], inference_model, u1[k - 1], u2[k])
@@ -116,9 +116,9 @@ def run():
                 )
                 gmm_inference_model = inference_model.replace_state_noise(gm_state_noise)
 
-                resample_strategy = b_filters.ResampleStrategy.resolve(b_filters.ResampleType.residual)
-                gspf = b_filters.Gspf(0.001, n_particles, resample_strategy=resample_strategy)
-                gmm = b_filters.init_gmm(x_est[:, 0], x_cov_est, n_particles, n_mixture)
+                resample_strategy = bf.ResampleStrategy.resolve(bf.ResampleType.residual)
+                gspf = bf.Gspf(0.001, n_particles, resample_strategy=resample_strategy)
+                gmm = bf.init_gmm(x_est[:, 0], x_cov_est, n_particles, n_mixture)
                 for k in range(1, data_points_count):
                     x_est[:, k], data_set = gspf.estimate(gmm, z[:, k], gmm_inference_model, u1[k - 1], u2[k])
             else:
