@@ -14,15 +14,14 @@ from utils.stat_utils import stat_errors
 
 def run():
     # todo: check dim of return between different numeric methods
-    # gh_points, gh_weights = num_cmp.eval_gauss_hermite_rule(4, 3)
     # todo: fix generate_sparse_gauss_hermite_points
     # sgh_points, sgh_weights = num_cmp.generate_sparse_gauss_hermite_points(2, 3, 2)
 
-    filter_types = [BayesianFilterType.srcdkf]  # todo: fix sghqf
-    # [kf, ekf, ukf, srukf, cdkf, srcdkf, ckf, srckf, fdckf, cqkf, ghqf, sghqf, pf, gspf ??,  ]
+    filter_types = [BayesianFilterType.gspf]  # todo: fix sghqf
+    # [kf, ekf, ukf, srukf, cdkf, srcdkf, ckf, srckf, fdckf, cqkf, ghqf, sghqf, pf, gspf, sppf, gmsppf  ]
 
     number_of_runs = 100  # 500
-    data_points_count = 100  # kf and ekf works only when <= 30
+    data_points_count = 50  # kf and ekf works only when <= 30
     draw_iterations = True
     err_arr = np.zeros((number_of_runs, data_points_count - 1))
 
@@ -71,7 +70,7 @@ def run():
                 elif filter_type is BayesianFilterType.cqkf:
                     spkf = bf.Cqkf(order=9)
                 elif filter_type is BayesianFilterType.ghqf:
-                    spkf = bf.Ghqf(order=11)
+                    spkf = bf.Ghqf(order=22)
                 elif filter_type is BayesianFilterType.sghqf:
                     spkf = bf.Sghqf(order=11, manner=3)
                 elif filter_type is BayesianFilterType.kf:
@@ -90,7 +89,7 @@ def run():
             elif filter_type is BayesianFilterType.pf:
                 resample_strategy = bf.ResampleStrategy.resolve(bf.ResampleType.residual)
                 pf = bf.Pf(0.1, resample_strategy=resample_strategy)
-                n_particles = int(1e5)
+                n_particles = int(1e3)
                 particles = np.atleast_2d(multivariate_normal.rvs(x_est[:, 0], x_cov_est, n_particles))
                 weights = np.tile(1 / n_particles, n_particles)
                 data_set = bf.BootstrapDataSet(particles, weights)
@@ -98,7 +97,7 @@ def run():
                 for k in range(1, data_points_count):
                     x_est[:, k], data_set = pf.estimate(data_set, z[:, k], inference_model, u1[k - 1], u2[k])
             elif filter_type is BayesianFilterType.gspf:
-                n_particles = int(1e3)
+                n_particles = int(2e4)
                 n_mixture = 4
                 initial_cov = np.squeeze(inference_model.state_noise.covariance)
                 gm_cov = np.zeros((4, 1, 1))
@@ -117,10 +116,10 @@ def run():
                 gmm_inference_model = inference_model.replace_state_noise(gm_state_noise)
 
                 resample_strategy = bf.ResampleStrategy.resolve(bf.ResampleType.residual)
-                gspf = bf.Gspf(0.001, n_particles, resample_strategy=resample_strategy)
-                gmm = bf.init_gmm(x_est[:, 0], x_cov_est, n_particles, n_mixture)
+                gspf = bf.Gspf(0.0001, n_particles, resample_strategy=resample_strategy)
+                gmi = bf.Gspf.init_gmi(x_est[:, 0], x_cov_est, n_particles, n_mixture)
                 for k in range(1, data_points_count):
-                    x_est[:, k], data_set = gspf.estimate(gmm, z[:, k], gmm_inference_model, u1[k - 1], u2[k])
+                    x_est[:, k], gmi = gspf.estimate(gmi, z[:, k], gmm_inference_model, u1[k - 1], u2[k])
             else:
                 raise Exception("Not supported filter type: {0}".format(filter_type.name))
 

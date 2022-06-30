@@ -179,6 +179,9 @@ class GaussianStochasticModel(GeneralStochasticModel):
         self._covariance = np.atleast_2d(
             matrix_utils.ensure_diagonal_matrix(covariance) if is_diag else covariance
         )
+        self._covariance_sqrt = np.atleast_2d(
+            cov_utils.to_sqrt_covariance(covariance, covariance_type)
+        )
         self._covariance_full = np.atleast_2d(
             cov_utils.to_full_covariance(covariance, covariance_type)
         )
@@ -215,7 +218,7 @@ class GaussianStochasticModel(GeneralStochasticModel):
         if samples is None:
             raise Exception("<samples> should be n-dim numpy array")
 
-        return np.atleast_1d(
+        return np.matrix(
             multivariate_normal.pdf(samples.T, mean=self._mean, cov=self._covariance_full)
         )
 
@@ -229,8 +232,10 @@ class ComboGaussianStochasticModel(GeneralStochasticModel):
         if not all(source.covariance_type == cov_type for source in sources):
             raise Exception("all source items must have same covariance_type")
 
-        cov = matrix_utils.put_matrices_into_zero_matrix_one_by_one(dimension,
-                                                                    list(map(lambda x: x.covariance, sources)))
+        cov = matrix_utils.put_matrices_into_zero_matrix_one_by_one(
+            dimension,
+            list(map(lambda x: x.covariance, sources))
+            )
         self._dimension = dimension
         self._covariance_type = sources[0].covariance_type
         self._mean = np.atleast_1d([sub_mean for source in sources for sub_mean in source.mean])
@@ -363,10 +368,12 @@ class GaussianMixtureStochasticModel(GeneralStochasticModel):
     def sample(self, size) -> np.ndarray:
         samples_component = np.random.multinomial(size, self.weights)
         return np.atleast_2d(
-            np.hstack([
-                np.transpose(np.random.multivariate_normal(mean, covariance, int(sample)))
-                for (mean, covariance, sample) in zip(self.mean, self.covariance, samples_component)
-            ])
+            np.hstack(
+                [
+                    np.transpose(np.random.multivariate_normal(mean, covariance, int(sample)))
+                    for (mean, covariance, sample) in zip(self.mean, self.covariance, samples_component)
+                ]
+            )
         )
 
     def likelihood(self, samples: np.ndarray) -> np.ndarray:
@@ -375,9 +382,9 @@ class GaussianMixtureStochasticModel(GeneralStochasticModel):
         return np.atleast_1d(llh)
 
     def probability(
-            self,
-            samples: np.ndarray,
-            evidence_weights: np.ndarray = None
+        self,
+        samples: np.ndarray,
+        evidence_weights: np.ndarray = None
     ) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
         """
         Calculates any of the related (through Bayes rule) probabilities of a Gaussian Mixture Model and
@@ -403,10 +410,12 @@ class GaussianMixtureStochasticModel(GeneralStochasticModel):
         """
         prior = np.copy(self.weights)
 
-        llh = np.column_stack([
-            multivariate_normal.pdf(samples.T, mean=mean, cov=cov)
-            for (mean, cov) in zip(self.mean, self._covariance_full)
-        ])
+        llh = np.column_stack(
+            [
+                multivariate_normal.pdf(samples.T, mean=mean, cov=cov)
+                for (mean, cov) in zip(self.mean, self._covariance_full)
+            ]
+        )
 
         evidence_w = np.ones(np.shape(llh)) if evidence_weights is None else evidence_weights
         evidence = (llh / evidence_w) @ prior
@@ -418,8 +427,10 @@ class GaussianMixtureStochasticModel(GeneralStochasticModel):
 
     @staticmethod
     def from_gaussian(gauss_process: GaussianStochasticModel) -> GaussianMixtureStochasticModel:
-        return GaussianMixtureStochasticModel(mixture_size=1, mean=[gauss_process.mean],
-                                              covariance=[gauss_process.covariance], covariance_type=gauss_process.covariance_type)
+        return GaussianMixtureStochasticModel(
+            mixture_size=1, mean=[gauss_process.mean],
+            covariance=[gauss_process.covariance], covariance_type=gauss_process.covariance_type
+            )
 
 
 def build_stochastic_process(noise_type: NoiseType, **kwargs) -> GeneralStochasticModel:

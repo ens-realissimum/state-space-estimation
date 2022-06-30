@@ -125,7 +125,7 @@ class StateSpaceModel(ABC):
             observation: np.ndarray,
             state: np.ndarray,
             control_z: Optional[np.ndarray] = None
-    ) -> np.ndarray:
+    ) -> np.matrix:
         """
         Function to calculate the observation likelihood function that calculates p(z(k)|x(k))
         :return: calculated likelihood.

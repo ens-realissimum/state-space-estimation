@@ -4,6 +4,14 @@ import numpy as np
 import quaternion as npq
 
 
+def ensure_positive_semi_definite(matrix: np.matrix) -> np.ndarray:
+    min_eig = np.min(np.real(np.linalg.eigvals(matrix)))
+    if min_eig < 0:
+        matrix -= 10 * min_eig * np.eye(*matrix.shape)
+
+    return matrix
+
+
 def put_matrices_into_zero_matrix_one_by_one(dimension: int, matrix_list: Iterable[np.ndarray]) -> np.array:
     result_shape = (dimension, dimension)
     result_matrix = np.zeros(result_shape)
@@ -40,7 +48,7 @@ def ensure_diagonal_matrix(matrix: Iterable) -> np.ndarray:
     return np.diag(np.diag(np.asarray(matrix)))
 
 
-def sqrt_decomposition_via_svd(matrix: np.ndarray) -> np.ndarray:
+def svd_sqrt(matrix: np.ndarray) -> np.ndarray:
     """
     Produce square root decomposition from standard svd decomposition via following equation
         result = 0.5*(u + v) @ sqrt(s)

@@ -34,22 +34,22 @@ def eval_fifth_degree_cubature_rule(dim: int) -> Tuple[np.ndarray, np.ndarray]:
 
     for i in range(dim):
         for j in range(i + 1, dim):
-            count = count + 1
+            count += 1
             points[i, count] = x_1
             points[j, count] = x_1
             weights[count] = x_2
 
-            count = count + 1
+            count += 1
             points[i, count] = x_1
             points[j, count] = -x_1
             weights[count] = x_2
 
-            count = count + 1
+            count += 1
             points[i, count] = -x_1
             points[j, count] = x_1
             weights[count] = x_2
 
-            count = count + 1
+            count += 1
             points[i, count] = -x_1
             points[j, count] = -x_1
             weights[count] = x_2
@@ -70,7 +70,7 @@ def eval_laguerre_quadrature_rule(order: int, alpha: float) -> Tuple[np.ndarray,
     For the details see:
         https://en.wikipedia.org/wiki/Classical_orthogonal_polynomials#Chebyshev_polynomials
 
-    :param order: n'th degree Laguerre polynomial (subscript index of polynomial)
+    :param order: nth degree Laguerre polynomial (subscript index of polynomial)
     :param alpha: parameter of Laguerre polynomial (superscript index polynomial), alpha = n / 2 - 1, where n - dimension of state space
     :return:
         points: set of generated points;
@@ -218,7 +218,8 @@ def eval_gauss_hermite_rule(order: int, dim: Union[int, None]) -> Tuple[np.ndarr
     Generate points and weights according to Gauss-Hermite quadrature rule.
     Weight function is chosen to be the standard Gaussian density with zero mean and unit variance N(0; I).
     The interval of interest is chosen to be (-infinity; +infinity).
-    According to the fundamental theorem of Gauss-Hermite quadrature, the quadrature points are chosen to be the zeros of the m-th order Hermite polynomial.
+    According to the fundamental theorem of Gauss-Hermite quadrature, the quadrature points are chosen to be the zeros of the m-th
+    order Hermite polynomial.
     Since the zeros of the Hermite polynomials are distinct,
     it is noteworthy that the determinant of the coefficient matrix in is the well known Vandermonde's determinant that is nonzero.
     For an m-point quadrature scheme, the resulting quadrature rule is exact for all polynomials of degree  <= 2m - 1
@@ -243,7 +244,7 @@ def eval_gauss_hermite_rule(order: int, dim: Union[int, None]) -> Tuple[np.ndarr
 
     weights = eig_vectors[:, np.argsort(eig_values)].T
     weights = np.sqrt(np.pi) * weights[:, 0] ** 2
-    weights = weights / np.sum(weights)
+    weights /= np.sum(weights)
 
     if dim is not None:
         points = cartesian_product(*(np.tile(points, (dim, 1))))
@@ -264,7 +265,7 @@ def generate_next_index_sparse_gauss_hermite_rule(accuracy_level: int, index: np
 
     for i in range(dim):
         result[:, i] = index
-        result[i, i] = result[i, i] + 1
+        result[i, i] += 1
 
         if not is_reasonable_sghr(accuracy_level, dim, result[:, i]):
             result[:, i] = 0
@@ -317,7 +318,12 @@ def get_one_dim_sparse_gauss_hermite_point(idx: np.ndarray, point: int, manner: 
     return np.asarray([]), np.asarray([])
 
 
-def generate_sparse_gauss_hermite_point(accuracy_level: int, idx: np.ndarray, point_set: np.ndarray, manner: int) -> Tuple[np.ndarray, np.ndarray]:
+def generate_sparse_gauss_hermite_point(
+        accuracy_level: int,
+        idx: np.ndarray,
+        point_set: np.ndarray,
+        manner: int
+) -> Tuple[np.ndarray, np.ndarray]:
     dim = np.size(idx)
     q = np.sum(idx) - dim
 
