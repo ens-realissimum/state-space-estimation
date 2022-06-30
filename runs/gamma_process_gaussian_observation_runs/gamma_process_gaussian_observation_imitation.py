@@ -102,7 +102,7 @@ def run():
                 initial_cov = np.squeeze(inference_model.state_noise.covariance)
                 gm_cov = np.zeros((4, 1, 1))
                 gm_cov[0, :, :] = 2 * initial_cov
-                gm_cov[1, :, :] = 0.5 * initial_cov
+                gm_cov[1, :, :] = 0.58 * initial_cov
                 gm_cov[2, :, :] = 1.5 * initial_cov
                 gm_cov[3, :, :] = 1.25 * initial_cov
                 gm_state_noise = build_stochastic_process(
@@ -111,13 +111,13 @@ def run():
                     mean=np.tile(np.asarray(np.squeeze(inference_model.state_noise.mean)), (n_mixture, 1)),
                     covariance=gm_cov,
                     covariance_type=inference_model.state_noise.covariance_type,
-                    weights=np.asarray([0.45, 0.45, 0.05, 0.05])
+                    weights=np.asarray([0.25, 0.25, 0.25, 0.25])
                 )
                 gmm_inference_model = inference_model.replace_state_noise(gm_state_noise)
 
                 resample_strategy = bf.ResampleStrategy.resolve(bf.ResampleType.residual)
                 gspf = bf.Gspf(0.0001, n_particles, resample_strategy=resample_strategy)
-                gmi = bf.Gspf.init_gmi(x_est[:, 0], x_cov_est, n_particles, n_mixture)
+                gmi = bf.init_gmi(x_est[:, 0], gmm_inference_model.state_dim, n_particles, n_mixture)
                 for k in range(1, data_points_count):
                     x_est[:, k], gmi = gspf.estimate(gmi, z[:, k], gmm_inference_model, u1[k - 1], u2[k])
             else:
