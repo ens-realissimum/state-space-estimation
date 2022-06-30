@@ -1362,12 +1362,14 @@ class BootstrapDataSet:
 class ResampleType(Enum):
     unknown = 0,
     residual = 1,
-    multinomial = 2,
-    stratified = 3,
-    systematic = 4
+    residual2 = 2,
+    multinomial = 3,
+    stratified = 4,
+    systematic = 5
 
 
 class ResampleStrategy(ABC):
+    @abstractmethod
     def resample(self, weights: np.ndarray) -> np.ndarray:
         """
         Performs the resampling algorithm used by particle filters
@@ -1382,6 +1384,8 @@ class ResampleStrategy(ABC):
             raise Exception("Can't construct strategy for resample_type=unknown")
         elif resample_type is ResampleType.residual:
             return ResidualResampleStrategy()
+        elif resample_type is ResampleType.residual2:
+            return ResidualResample2Strategy()
         elif resample_type is ResampleType.multinomial:
             return MultinomialResampleStrategy()
         elif resample_type is ResampleType.stratified:
@@ -1395,6 +1399,56 @@ class ResampleStrategy(ABC):
 class ResidualResampleStrategy(ResampleStrategy):
     def __str__(self):
         return "Residual resample algorithm"
+
+    def resample(self, weights: np.ndarray) -> np.ndarray:
+        particles_count = len(weights)
+        input_index = range(particles_count)
+
+        out_index = np.zeros(particles_count, dtype=int)
+
+        # first integer part
+        weights_residual = particles_count * weights
+        integer_weights_kind = np.fix(weights_residual)
+
+        residual_particles_count = int(particles_count - np.sum(integer_weights_kind))
+
+        if residual_particles_count > 0:
+            weights_residual = (weights_residual - integer_weights_kind) / residual_particles_count
+            cum_dist = np.cumsum(weights_residual)
+
+            # generate N (N = residual_particles_count) ordered random variables uniformly distributed in [0, 1]
+            u = np.flip(
+                np.cumprod(
+                    np.power(
+                        np.random.rand(residual_particles_count),
+                        1 / np.asarray(list(range(1, residual_particles_count + 1))[::-1])
+                    )
+                )
+            )
+            j = 1
+
+            for i in range(residual_particles_count):
+                while u[i] > cum_dist[j]:
+                    j += 1
+
+                integer_weights_kind[j] += 1
+
+        index = 0
+        for i in range(particles_count):
+            if integer_weights_kind[i] > 0:
+                upper_index = int(index + integer_weights_kind[i] - 1)
+
+                for j in range(index, upper_index):
+                    out_index[j] = int(input_index[i])
+
+            index = int(index + integer_weights_kind[i])
+
+        return out_index
+
+
+class ResidualResample2Strategy(ResampleStrategy):
+    def __str__(self):
+        return "Residual resample algorithm (2)"
 
     """
     Residual resample algorithm.
@@ -1530,7 +1584,7 @@ class Pf(PdfApproximationKalmanFilter):
     ):
         super().__init__(estimate_type)
         self._resample_threshold = resample_threshold
-        self._resample_strategy = resample_strategy if resample_strategy is not None else ResidualResampleStrategy()
+        self._resample_strategy = resample_strategy if resample_strategy is not None else ResidualResample2Strategy()
 
     def __str__(self):
         return "Resample threshold: {0}; Estimate type: {1}; Resampling method: {2}".format(

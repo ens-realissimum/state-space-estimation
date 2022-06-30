@@ -97,7 +97,7 @@ def run():
                 for k in range(1, data_points_count):
                     x_est[:, k], data_set = pf.estimate(data_set, z[:, k], inference_model, u1[k - 1], u2[k])
             elif filter_type is BayesianFilterType.gspf:
-                n_particles = int(2e4)
+                n_particles = int(1e4)
                 n_mixture = 4
                 initial_cov = np.squeeze(inference_model.state_noise.covariance)
                 gm_cov = np.zeros((4, 1, 1))
