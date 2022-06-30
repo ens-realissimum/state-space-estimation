@@ -1704,11 +1704,12 @@ class Gspf(PdfApproximationKalmanFilter):
         for g in range(gmi.n_components):
             x_buf1[g, :, :] = multivariate_normal.rvs(gmi.means_[g, :], gmi.covariances_[g, :, :], self._n_samples)
 
+        noise_buf = np.random.randn(n_components, model.state_dim, self._n_samples)
         for k in range(model.state_noise.n_components):
             mean_components = np.tile(model.state_noise.mean[k, :], (1, self._n_samples))
             for g in range(gmi.n_components):
                 gk = g + k * gmi.n_components
-                x_noise_buf = model.state_noise.covariance[k, :, :] @ np.random.randn(model.state_dim, self._n_samples) + mean_components
+                x_noise_buf = model.state_noise.covariance[k, :, :] @ noise_buf[gk, :, :] + mean_components
                 x_buf2[gk, :, :] = model.transition_func(x_buf1[g, :, :], x_noise_buf, ctrl_x)
                 x_weights_new[gk] = gmi.weights_[g] * model.state_noise.weights[k]
 
@@ -1725,9 +1726,10 @@ class Gspf(PdfApproximationKalmanFilter):
 
         # Observation / measurement update (correction)
         obs = np.tile(observation, (1, self._n_samples))
+        noise_buf = np.random.randn(n_components, model.state_dim, self._n_samples)
         for g in range(n_components):
             mean_component_g = np.tile(state_mean_new[g, :], (1, self._n_samples))
-            x_buf3[g, :, :] = state_cov_new[g, :, :] @ np.random.randn(model.state_dim, self._n_samples) + mean_component_g
+            x_buf3[g, :, :] = state_cov_new[g, :, :] @ noise_buf[g, :, :] + mean_component_g
             importance_w[g, :] = model.likelihood(obs, x_buf3[g, :, :], ctrl_z) + 1e-99
 
         weight_norm = 0
