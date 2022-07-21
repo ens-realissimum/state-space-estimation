@@ -13,6 +13,7 @@ from utils.stat_utils import stat_errors
 
 
 def run():
+    np.random.seed(42)  # TODO: DEBUG ONLY
     # todo: check dim of return between different numeric methods
     # todo: fix generate_sparse_gauss_hermite_points
     # sgh_points, sgh_weights = num_cmp.generate_sparse_gauss_hermite_points(2, 3, 2)
@@ -42,7 +43,7 @@ def run():
 
             z[0] = gssm_model.observation_func(x[:, 0], z_noise[:, 0], np.asarray([1]))
             for j in range(1, data_points_count):
-                x[:, j] = gssm_model.transition_func(x[:, j - 1], x_noise[:, j - 1], np.asarray([j - 1]))
+                x[:, j] = gssm_model.transition_func(x[:, j - 1], x_noise[:, j - 1], np.asarray([j]))
                 z[:, j] = gssm_model.observation_func(x[:, j], z_noise[:, j], np.asarray([j]))
 
             u1 = np.asarray(range(data_points_count))
@@ -113,7 +114,7 @@ def run():
                     covariance_type=inference_model.state_noise.covariance_type,
                     weights=np.asarray([0.25, 0.25, 0.25, 0.25])
                 )
-                gmm_inference_model = inference_model.replace_state_noise(gm_state_noise)
+                gmm_inference_model = inference_model.set_state_noise(gm_state_noise)
 
                 resample_strategy = bf.ResampleStrategy.resolve(bf.ResampleType.residual)
                 gspf = bf.Gspf(0.0001, n_particles, resample_strategy=resample_strategy)

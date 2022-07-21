@@ -18,7 +18,8 @@ class GammaProcessWithGaussianObservationGssm(StateSpaceModel):
     State space function is non-linear.
     """
 
-    def __init__(self, omega: float, phi: float, state_noise: sm.GeneralStochasticModel, observation_noise: sm.GeneralStochasticModel):
+    def __init__(self, omega: float, phi: float, state_noise: sm.GeneralStochasticModel,
+                 observation_noise: sm.GeneralStochasticModel):
         super().__init__(state_noise, observation_noise)
 
         self._omega = omega
@@ -53,10 +54,10 @@ class GammaProcessWithGaussianObservationGssm(StateSpaceModel):
         return 1
 
     def transition_func(
-        self,
-        state: np.ndarray,
-        state_noise: Optional[np.ndarray] = None,
-        control_vect: Optional[np.ndarray] = None
+            self,
+            state: np.ndarray,
+            state_noise: Optional[np.ndarray] = None,
+            control_vect: Optional[np.ndarray] = None
     ) -> np.ndarray:
         u = 1 if control_vect is None else control_vect
         v = 0 if state_noise is None else state_noise
@@ -64,10 +65,10 @@ class GammaProcessWithGaussianObservationGssm(StateSpaceModel):
         return 1 + np.sin(self._omega * np.pi * u) + self._phi * state + v
 
     def observation_func(
-        self,
-        state: np.ndarray,
-        observation_noise: Optional[np.ndarray] = None,
-        control_vect: Optional[np.ndarray] = None
+            self,
+            state: np.ndarray,
+            observation_noise: Optional[np.ndarray] = None,
+            control_vect: Optional[np.ndarray] = None
     ) -> np.ndarray:
         x = np.atleast_2d(state)
         u = 0 if control_vect is None else control_vect
@@ -80,31 +81,31 @@ class GammaProcessWithGaussianObservationGssm(StateSpaceModel):
         return z
 
     def prior(
-        self,
-        next_state: np.ndarray,
-        state: np.ndarray,
-        control_x: Optional[np.ndarray] = None
+            self,
+            next_state: np.ndarray,
+            state: np.ndarray,
+            control_x: Optional[np.ndarray] = None
     ) -> np.ndarray:
         x_deviation = next_state - self.transition_func(state, None, control_x)
         return self.state_noise.likelihood(x_deviation)
 
     def likelihood(
-        self,
-        observation: np.ndarray,
-        state: np.ndarray,
-        control_z: Optional[np.ndarray] = None
+            self,
+            observation: np.ndarray,
+            state: np.ndarray,
+            control_z: Optional[np.ndarray] = None
     ) -> np.matrix:
         z_deviation = observation - self.observation_func(state, None, control_z)
         return np.matrix(self.observation_noise.likelihood(z_deviation))
 
     def linearize(
-        self,
-        lin_type: LinearizationType,
-        state: Optional[np.ndarray],
-        state_noise: Optional[np.ndarray],
-        observation_noise: Optional[np.ndarray],
-        control_x: Optional[np.ndarray],
-        control_z: Optional[np.ndarray]
+            self,
+            lin_type: LinearizationType,
+            state: Optional[np.ndarray],
+            state_noise: Optional[np.ndarray],
+            observation_noise: Optional[np.ndarray],
+            control_x: Optional[np.ndarray],
+            control_z: Optional[np.ndarray]
     ) -> np.ndarray:
         if lin_type == LinearizationType.F:
             return np.atleast_2d([self._phi])
@@ -130,22 +131,22 @@ class GammaProcessWithGaussianObservationGssm(StateSpaceModel):
             self._phi = kwargs["phi"]
 
     def clone(
-        self,
-        state_noise: sm.GeneralStochasticModel,
-        observation_noise: sm.GeneralStochasticModel,
-        reconcile_strategy: CovarianceMatrixAdaptation
+            self,
+            state_noise: sm.GeneralStochasticModel,
+            observation_noise: sm.GeneralStochasticModel,
+            reconcile_strategy: CovarianceMatrixAdaptation
     ) -> StateSpaceModel:
         return GammaProcessWithGaussianObservationGssm(self._omega, self._phi, state_noise, observation_noise)
 
 
 def build(
-    omega: float,
-    phi: float,
-    shape: float,
-    scale: float,
-    n_mean: float,
-    n_cov: float,
-    n_cov_type: CovarianceType
+        omega: float,
+        phi: float,
+        shape: float,
+        scale: float,
+        n_mean: float,
+        n_cov: float,
+        n_cov_type: CovarianceType
 ) -> GammaProcessWithGaussianObservationGssm:
     x_noise = sm.build_stochastic_process(NoiseType.gamma, shape=shape, scale=scale)
     z_noise = sm.build_stochastic_process(

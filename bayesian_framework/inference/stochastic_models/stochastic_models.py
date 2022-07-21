@@ -123,14 +123,14 @@ class GammaStochasticModel(GeneralStochasticModel):
             gamma.pdf(samples.T, self._shape, scale=self._scale)
         )
 
-    def sample(self, size: int) -> np.ndarray:
+    def sample(self, size: int) -> np.matrix:
         if size is None:
             raise Exception("<size> is mandatory but was not specified")
 
         if size <= 0:
             raise Exception("<size> is negative or equal to zero. Must be integer greater than zero")
 
-        return np.atleast_2d(
+        return np.matrix(
             gamma.rvs(self._shape, scale=self._scale, size=size).T
         )
 
@@ -141,8 +141,8 @@ class GammaStochasticModel(GeneralStochasticModel):
         )
 
     @property
-    def covariance(self):
-        return np.atleast_2d(
+    def covariance(self) -> np.matrix:
+        return np.matrix(
             gamma.var(self._shape, scale=self._scale)
         )
 
@@ -176,13 +176,13 @@ class GaussianStochasticModel(GeneralStochasticModel):
 
         is_diag = covariance_type in (CovarianceType.diag, CovarianceType.sqrt_diag)
         self._covariance_type = covariance_type
-        self._covariance = np.atleast_2d(
+        self._covariance = np.matrix(
             matrix_utils.ensure_diagonal_matrix(covariance) if is_diag else covariance
         )
-        self._covariance_sqrt = np.atleast_2d(
+        self._covariance_sqrt = np.matrix(
             cov_utils.to_sqrt_covariance(covariance, covariance_type)
         )
-        self._covariance_full = np.atleast_2d(
+        self._covariance_full = np.matrix(
             cov_utils.to_full_covariance(covariance, covariance_type)
         )
 
@@ -202,19 +202,19 @@ class GaussianStochasticModel(GeneralStochasticModel):
         return self._covariance_type
 
     @property
-    def covariance(self) -> np.ndarray:
+    def covariance(self) -> np.matrix:
         return self._covariance
 
     @property
     def mean(self) -> np.ndarray:
         return self._mean
 
-    def sample(self, size: int) -> np.ndarray:
-        return np.atleast_2d(
+    def sample(self, size: int) -> np.matrix:
+        return np.matrix(
             multivariate_normal.rvs(mean=self._mean, cov=self._covariance_full, size=size).T
         )
 
-    def likelihood(self, samples: np.ndarray) -> np.ndarray:
+    def likelihood(self, samples: np.ndarray) -> np.matrix:
         if samples is None:
             raise Exception("<samples> should be n-dim numpy array")
 

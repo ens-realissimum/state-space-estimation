@@ -196,8 +196,8 @@ class StateSpaceModel(ABC):
     def state_noise_dim(self):
         return self.state_noise.dim
 
-    def replace_state_noise(self, state_noise: sm.GeneralStochasticModel) -> StateSpaceModel:
+    def set_state_noise(self, state_noise: sm.GeneralStochasticModel) -> StateSpaceModel:
         return self.clone(state_noise, self.observation_noise, self.reconcile_strategy)
 
-    def replace_observation_noise(self, observation_noise: sm.GeneralStochasticModel) -> StateSpaceModel:
+    def set_observation_noise(self, observation_noise: sm.GeneralStochasticModel) -> StateSpaceModel:
         return self.clone(self.state_noise, observation_noise, self.reconcile_strategy)

@@ -12,15 +12,16 @@ from sklearn.mixture import GaussianMixture
 import bayesian_framework.shared.numerical_computations as num_computations
 import utils.matrix_utils as m_utils
 from bayesian_framework.inference.gssm import StateSpaceModel
+from bayesian_framework.inference.stochastic_models.covariance_type import CovarianceType
 from bayesian_framework.shared.gaussian_mixture_info import GaussianMixtureInfo
 from bayesian_framework.shared.linearization_type import LinearizationType
 
 
 def init_gmi(
-    x_init: np.ndarray,
-    x_dim: int,
-    particles_count: int,
-    n_components: int
+        x_init: np.ndarray,
+        x_dim: int,
+        particles_count: int,
+        n_components: int
 ) -> GaussianMixtureInfo:
     particles = np.squeeze(
         np.random.randn(x_dim, particles_count) + np.tile(x_init, (1, particles_count))
@@ -36,13 +37,13 @@ def init_gmi(
 
 class KalmanFilterInternalInfo:
     def __init__(
-        self,
-        state_mean_predicted: np.ndarray,
-        state_cov_predicted: np.ndarray,
-        observation_mean_predicted: np.ndarray,
-        observation_cov_predicted: np.ndarray,
-        innovation: np.ndarray,
-        filter_gain: np.ndarray
+            self,
+            state_mean_predicted: np.ndarray,
+            state_cov_predicted: np.ndarray,
+            observation_mean_predicted: np.ndarray,
+            observation_cov_predicted: np.ndarray,
+            innovation: np.ndarray,
+            filter_gain: np.ndarray
     ):
         self._x_mean_predicted = state_mean_predicted
         self._x_cov_predicted = state_cov_predicted
@@ -88,13 +89,13 @@ class LocalApproximationKalmanFilter(ABC):
 
     @abstractmethod
     def estimate(
-        self,
-        state: np.ndarray,
-        cov_state: np.ndarray,
-        observation: np.ndarray,
-        model: StateSpaceModel,
-        ctrl_x: Optional[np.ndarray],
-        ctrl_z: Optional[np.ndarray]
+            self,
+            state: np.ndarray,
+            cov_state: np.ndarray,
+            observation: np.ndarray,
+            model: StateSpaceModel,
+            ctrl_x: Optional[np.ndarray],
+            ctrl_z: Optional[np.ndarray]
     ) -> KalmanFilterResult:
         pass
 
@@ -110,12 +111,12 @@ class PdfApproximationKalmanFilter(ABC):
 
     @abstractmethod
     def estimate(
-        self,
-        data_set: BootstrapDataSet,
-        observation: np.ndarray,
-        model: StateSpaceModel,
-        ctrl_x: Optional[np.ndarray],
-        ctrl_z: Optional[np.ndarray]
+            self,
+            data_set: BootstrapDataSet,
+            observation: np.ndarray,
+            model: StateSpaceModel,
+            ctrl_x: Optional[np.ndarray],
+            ctrl_z: Optional[np.ndarray]
     ) -> Tuple[np.ndarray, BootstrapDataSet]:
         """
         Estimates state mean (x(k)) of dynamic system at time k based on noisy observations starting at time k (z(k)).
@@ -149,41 +150,41 @@ class PdfApproximationKalmanFilter(ABC):
 class LinearKf(LocalApproximationKalmanFilter):
     @abstractmethod
     def eval_h_matrix(
-        self: Kf,
-        model: StateSpaceModel,
-        x_predicted: np.ndarray,
-        ctrl_x: Union[np.ndarray, None],
-        ctrl_z: Union[np.ndarray, None]
+            self: Kf,
+            model: StateSpaceModel,
+            x_predicted: np.ndarray,
+            ctrl_x: Union[np.ndarray, None],
+            ctrl_z: Union[np.ndarray, None]
     ) -> np.ndarray:
         pass
 
     @abstractmethod
     def eval_c_matrix(
-        self: Kf,
-        model: StateSpaceModel,
-        x_predicted: np.ndarray,
-        ctrl_x: Union[np.ndarray, None],
-        ctrl_z: Union[np.ndarray, None]
+            self: Kf,
+            model: StateSpaceModel,
+            x_predicted: np.ndarray,
+            ctrl_x: Union[np.ndarray, None],
+            ctrl_z: Union[np.ndarray, None]
     ) -> np.ndarray:
         pass
 
     @abstractmethod
     def eval_g_matrix(
-        self: Kf,
-        model: StateSpaceModel,
-        state: np.ndarray,
-        ctrl_x: Union[np.ndarray, None],
-        ctrl_z: Union[np.ndarray, None]
+            self: Kf,
+            model: StateSpaceModel,
+            state: np.ndarray,
+            ctrl_x: Union[np.ndarray, None],
+            ctrl_z: Union[np.ndarray, None]
     ) -> np.ndarray:
         pass
 
     @abstractmethod
     def eval_f_matrix(
-        self: Kf,
-        model: StateSpaceModel,
-        state: np.ndarray,
-        ctrl_x: Union[np.ndarray, None],
-        ctrl_z: Union[np.ndarray, None]
+            self: Kf,
+            model: StateSpaceModel,
+            state: np.ndarray,
+            ctrl_x: Union[np.ndarray, None],
+            ctrl_z: Union[np.ndarray, None]
     ) -> np.ndarray:
         pass
 
@@ -216,13 +217,13 @@ class Kf(LinearKf):
         return "Kalman Filter"
 
     def estimate(
-        self,
-        state: np.ndarray,
-        cov_state: np.ndarray,
-        observation: np.ndarray,
-        model: StateSpaceModel,
-        ctrl_x: Optional[np.ndarray],
-        ctrl_z: Optional[np.ndarray]
+            self,
+            state: np.ndarray,
+            cov_state: np.ndarray,
+            observation: np.ndarray,
+            model: StateSpaceModel,
+            ctrl_x: Optional[np.ndarray],
+            ctrl_z: Optional[np.ndarray]
     ) -> KalmanFilterResult:
         """
         Estimates state mean (x(k)) and covariance (cov_x(k)) of dynamic system at time k
@@ -284,38 +285,38 @@ class Kf(LinearKf):
         return state_new, state_cov_new, internal_vars
 
     def eval_h_matrix(
-        self: Kf,
-        model: StateSpaceModel,
-        x_predicted: np.ndarray,
-        ctrl_x: Union[np.ndarray, None],
-        ctrl_z: Union[np.ndarray, None]
+            self: Kf,
+            model: StateSpaceModel,
+            x_predicted: np.ndarray,
+            ctrl_x: Union[np.ndarray, None],
+            ctrl_z: Union[np.ndarray, None]
     ) -> np.ndarray:
         return model.linearize(LinearizationType.H, x_predicted, None, model.observation_noise.mean, None, ctrl_z)
 
     def eval_c_matrix(
-        self: Kf,
-        model: StateSpaceModel,
-        x_predicted: np.ndarray,
-        ctrl_x: Union[np.ndarray, None],
-        ctrl_z: Union[np.ndarray, None]
+            self: Kf,
+            model: StateSpaceModel,
+            x_predicted: np.ndarray,
+            ctrl_x: Union[np.ndarray, None],
+            ctrl_z: Union[np.ndarray, None]
     ) -> np.ndarray:
         return model.linearize(LinearizationType.C, x_predicted, None, model.observation_noise.mean, None, ctrl_z)
 
     def eval_g_matrix(
-        self: Kf,
-        model: StateSpaceModel,
-        state: np.ndarray,
-        ctrl_x: Union[np.ndarray, None],
-        ctrl_z: Union[np.ndarray, None]
+            self: Kf,
+            model: StateSpaceModel,
+            state: np.ndarray,
+            ctrl_x: Union[np.ndarray, None],
+            ctrl_z: Union[np.ndarray, None]
     ) -> np.ndarray:
         return model.linearize(LinearizationType.G, state, model.state_noise.mean, None, ctrl_x, None)
 
     def eval_f_matrix(
-        self: Kf,
-        model: StateSpaceModel,
-        state: np.ndarray,
-        ctrl_x: Union[np.ndarray, None],
-        ctrl_z: Union[np.ndarray, None]
+            self: Kf,
+            model: StateSpaceModel,
+            state: np.ndarray,
+            ctrl_x: Union[np.ndarray, None],
+            ctrl_z: Union[np.ndarray, None]
     ) -> np.ndarray:
         return model.linearize(LinearizationType.F, state, model.state_noise.mean, None, ctrl_x, None)
 
@@ -343,49 +344,53 @@ class Ekf(Kf):
         return "Extended Kalman Filter"
 
     def eval_h_matrix(
-        self: Kf,
-        model: StateSpaceModel,
-        x_predicted: np.ndarray,
-        ctrl_x: Union[np.ndarray, None],
-        ctrl_z: Union[np.ndarray, None]
+            self: Kf,
+            model: StateSpaceModel,
+            x_predicted: np.ndarray,
+            ctrl_x: Union[np.ndarray, None],
+            ctrl_z: Union[np.ndarray, None]
     ) -> np.ndarray:
-        return model.linearize(LinearizationType.H, x_predicted, model.state_noise.mean, model.observation_noise.mean, ctrl_x, ctrl_z)
+        return model.linearize(LinearizationType.H, x_predicted, model.state_noise.mean, model.observation_noise.mean,
+                               ctrl_x, ctrl_z)
 
     def eval_c_matrix(
-        self: Kf,
-        model: StateSpaceModel,
-        x_predicted: np.ndarray,
-        ctrl_x: Union[np.ndarray, None],
-        ctrl_z: Union[np.ndarray, None]
+            self: Kf,
+            model: StateSpaceModel,
+            x_predicted: np.ndarray,
+            ctrl_x: Union[np.ndarray, None],
+            ctrl_z: Union[np.ndarray, None]
     ) -> np.ndarray:
-        return model.linearize(LinearizationType.C, x_predicted, model.state_noise.mean, model.observation_noise.mean, ctrl_x, ctrl_z)
+        return model.linearize(LinearizationType.C, x_predicted, model.state_noise.mean, model.observation_noise.mean,
+                               ctrl_x, ctrl_z)
 
     def eval_g_matrix(
-        self: Kf,
-        model: StateSpaceModel,
-        state: np.ndarray,
-        ctrl_x: Union[np.ndarray, None],
-        ctrl_z: Union[np.ndarray, None]
+            self: Kf,
+            model: StateSpaceModel,
+            state: np.ndarray,
+            ctrl_x: Union[np.ndarray, None],
+            ctrl_z: Union[np.ndarray, None]
     ) -> np.ndarray:
-        return model.linearize(LinearizationType.G, state, model.state_noise.mean, model.observation_noise.mean, ctrl_x, ctrl_z)
+        return model.linearize(LinearizationType.G, state, model.state_noise.mean, model.observation_noise.mean, ctrl_x,
+                               ctrl_z)
 
     def eval_f_matrix(
-        self: Kf,
-        model: StateSpaceModel,
-        state: np.ndarray,
-        ctrl_x: Union[np.ndarray, None],
-        ctrl_z: Union[np.ndarray, None]
+            self: Kf,
+            model: StateSpaceModel,
+            state: np.ndarray,
+            ctrl_x: Union[np.ndarray, None],
+            ctrl_z: Union[np.ndarray, None]
     ) -> np.ndarray:
-        return model.linearize(LinearizationType.F, state, model.state_noise.mean, model.observation_noise.mean, ctrl_x, ctrl_z)
+        return model.linearize(LinearizationType.F, state, model.state_noise.mean, model.observation_noise.mean, ctrl_x,
+                               ctrl_z)
 
 
 class UnscentedTransformFilter(LocalApproximationKalmanFilter):
     @abstractmethod
     def estimate_state_cov(
-        self, filter_gain: np.ndarray,
-        x_cov_predicted: np.ndarray,
-        z_cov_predicted: np.ndarray,
-        model: StateSpaceModel
+            self, filter_gain: np.ndarray,
+            x_cov_predicted: np.ndarray,
+            z_cov_predicted: np.ndarray,
+            model: StateSpaceModel
     ) -> np.ndarray:
         pass
 
@@ -439,13 +444,13 @@ class Ukf(UnscentedTransformFilter):
         return "UKF: alpha: {0}; beta: {1}; kappa: {2}".format(self._alpha, self._beta, self._kappa)
 
     def estimate(
-        self,
-        state: np.ndarray,
-        cov_state: np.ndarray,
-        observation: np.ndarray,
-        model: StateSpaceModel,
-        ctrl_x: Optional[np.ndarray],
-        ctrl_z: Optional[np.ndarray]
+            self,
+            state: np.ndarray,
+            cov_state: np.ndarray,
+            observation: np.ndarray,
+            model: StateSpaceModel,
+            ctrl_x: Optional[np.ndarray],
+            ctrl_z: Optional[np.ndarray]
     ) -> KalmanFilterResult:
         """
         Estimates state mean (x(k)) and covariance (cov_x(k)) of dynamic system at time k
@@ -487,7 +492,8 @@ class Ukf(UnscentedTransformFilter):
         # Generate sigma points
         sigma_points_offset = self.eval_sigma_points_offset(augment_dim, cov_state, model)
 
-        offset = ((augment_dim + _lambda) ** 0.5) * np.hstack((np.zeros((augment_dim, 1)), sigma_points_offset, -sigma_points_offset))
+        offset = ((augment_dim + _lambda) ** 0.5) * np.hstack(
+            (np.zeros((augment_dim, 1)), sigma_points_offset, -sigma_points_offset))
         sigma_points = np.tile(
             np.vstack((state, model.state_noise.mean, model.observation_noise.mean)),
             (1, sigma_set_size)
@@ -525,10 +531,10 @@ class Ukf(UnscentedTransformFilter):
         return state_new, state_cov_new, internal_vars
 
     def estimate_state_cov(
-        self, filter_gain: np.ndarray,
-        x_cov_predicted: np.ndarray,
-        z_cov_predicted: np.ndarray,
-        model: StateSpaceModel
+            self, filter_gain: np.ndarray,
+            x_cov_predicted: np.ndarray,
+            z_cov_predicted: np.ndarray,
+            model: StateSpaceModel
     ) -> np.ndarray:
         return x_cov_predicted - filter_gain @ z_cov_predicted @ filter_gain.T
 
@@ -536,7 +542,8 @@ class Ukf(UnscentedTransformFilter):
         return m_utils.matrix_right_divide(cross_cov, z_cov_predicted)
 
     def eval_z_cov_predicted(self, model: StateSpaceModel, w: np.ndarray, z_centered: np.ndarray) -> np.ndarray:
-        return w[2] * z_centered[:, 0] @ z_centered[:, 0].T + w[1] * z_centered[:, 1:] @ z_centered[:, 1:].T + model.observation_noise.covariance
+        return w[2] * z_centered[:, 0] @ z_centered[:, 0].T + w[1] * z_centered[:, 1:] @ z_centered[:,
+                                                                                         1:].T + model.observation_noise.covariance
 
     def eval_x_cov_predicted(self, w: np.ndarray, x_centered: np.ndarray) -> np.ndarray:
         return w[2] * x_centered[:, 0] @ x_centered[:, 0].T + w[1] * x_centered[:, 1:] @ x_centered[:, 1:].T
@@ -586,7 +593,8 @@ class SrUkf(Ukf):
     def __str__(self):
         return "SRUKF: alpha: {0}; beta: {1}; kappa: {2}".format(self._alpha, self._beta, self._kappa)
 
-    def estimate_state_cov(self, filter_gain: np.ndarray, x_cov_predicted: np.ndarray, z_cov_predicted: np.ndarray, model: StateSpaceModel) -> np.ndarray:
+    def estimate_state_cov(self, filter_gain: np.ndarray, x_cov_predicted: np.ndarray, z_cov_predicted: np.ndarray,
+                           model: StateSpaceModel) -> np.ndarray:
         cov_updated = filter_gain @ z_cov_predicted
 
         sqrt_cov_state_new = x_cov_predicted
@@ -608,7 +616,8 @@ class SrUkf(Ukf):
                 )
             )
         )
-        z_cov_predicted = m_utils.cholesky_update(z_cov_predicted, sqrt_w[2] * z_centered[:, 0], "+" if w[2] > 0 else "-")
+        z_cov_predicted = m_utils.cholesky_update(z_cov_predicted, sqrt_w[2] * z_centered[:, 0],
+                                                  "+" if w[2] > 0 else "-")
         return z_cov_predicted.T  # should be lowered triangle
 
     def eval_x_cov_predicted(self, w: np.ndarray, x_centered: np.ndarray) -> np.ndarray:
@@ -669,13 +678,13 @@ class Cdkf(CentralDiffTransformFilter):
         return "CDKF. scale factor: {0}".format(self._scale_factor)
 
     def estimate(
-        self,
-        state: np.ndarray,
-        cov_state: np.ndarray,
-        observation: np.ndarray,
-        model: StateSpaceModel,
-        ctrl_x: Optional[np.ndarray],
-        ctrl_z: Optional[np.ndarray]
+            self,
+            state: np.ndarray,
+            cov_state: np.ndarray,
+            observation: np.ndarray,
+            model: StateSpaceModel,
+            ctrl_x: Optional[np.ndarray],
+            ctrl_z: Optional[np.ndarray]
     ) -> KalmanFilterResult:
         """
         Estimates state mean (x(k)) and covariance (cov_x(k)) of dynamic system at time k
@@ -736,7 +745,8 @@ class Cdkf(CentralDiffTransformFilter):
         # Generate sigma points for the observations
         offset_z = self.eval_unweighted_z_offset(model, x_cov_predicted_sqrt)
         offset_z_weighted = self._scale_factor * np.hstack((np.zeros((x_dim + n_dim, 1)), offset_z, -offset_z))
-        sigma_set_z = np.tile([x_mean_predicted, model.observation_noise.mean], (1, sigma_set_size_z)) + offset_z_weighted
+        sigma_set_z = np.tile([x_mean_predicted, model.observation_noise.mean],
+                              (1, sigma_set_size_z)) + offset_z_weighted
 
         # Propagate observation sigma points through observation model
         z_predicted = model.observation_func(sigma_set_z[:x_dim, :], sigma_set_z[x_dim:, :], ctrl_z)
@@ -780,14 +790,16 @@ class Cdkf(CentralDiffTransformFilter):
 
     @staticmethod
     def eval_prediction(
-        predicted_points: np.ndarray,
-        noise_dim: int,
-        model: StateSpaceModel,
-        weights: np.ndarray
+            predicted_points: np.ndarray,
+            noise_dim: int,
+            model: StateSpaceModel,
+            weights: np.ndarray
     ) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
         x_dim = model.state_dim
-        mean_predicted = weights[0, 0] * predicted_points[:, 0] + weights[0, 1] * np.sum(predicted_points[:, 1:], axis=1)
-        x1 = weights[1, 0] * (predicted_points[:, 1:x_dim + noise_dim + 1] - predicted_points[:, x_dim + noise_dim + 1:])
+        mean_predicted = weights[0, 0] * predicted_points[:, 0] + weights[0, 1] * np.sum(predicted_points[:, 1:],
+                                                                                         axis=1)
+        x1 = weights[1, 0] * (
+                    predicted_points[:, 1:x_dim + noise_dim + 1] - predicted_points[:, x_dim + noise_dim + 1:])
         x2 = weights[1, 1] * (predicted_points[:, 1:x_dim + noise_dim + 1]
                               + predicted_points[:, x_dim + noise_dim + 1:]
                               - np.tile(2 * predicted_points[:, 0], (1, x_dim + noise_dim)))
@@ -798,12 +810,14 @@ class Cdkf(CentralDiffTransformFilter):
 
     def eval_unweighted_z_offset(self, model: StateSpaceModel, x_cov_predicted_sqrt: np.ndarray) -> np.ndarray:
         sqrt_n_cov = np.linalg.cholesky(model.observation_noise.covariance)
-        return m_utils.put_matrices_into_zero_matrix_one_by_one(model.state_dim + model.observation_noise_dim, [x_cov_predicted_sqrt, sqrt_n_cov])
+        return m_utils.put_matrices_into_zero_matrix_one_by_one(model.state_dim + model.observation_noise_dim,
+                                                                [x_cov_predicted_sqrt, sqrt_n_cov])
 
     def eval_unweighted_x_offset(self, cov_state: np.ndarray, model: StateSpaceModel) -> np.ndarray:
         sqrt_v_cov = np.linalg.cholesky(model.state_noise.covariance)
         sqrt_x_cov = np.linalg.cholesky(cov_state)
-        return m_utils.put_matrices_into_zero_matrix_one_by_one(model.state_dim + model.state_noise_dim, [sqrt_x_cov, sqrt_v_cov])
+        return m_utils.put_matrices_into_zero_matrix_one_by_one(model.state_dim + model.state_noise_dim,
+                                                                [sqrt_x_cov, sqrt_v_cov])
 
 
 class SrCdkf(Cdkf):
@@ -855,13 +869,13 @@ class SrCdkf(Cdkf):
 class CubatureTransformFilter(LocalApproximationKalmanFilter):
     @abstractmethod
     def estimate_state_cov(
-        self,
-        filter_gain: np.ndarray,
-        x_cov_predicted: np.ndarray,
-        z_cov_predicted: np.ndarray,
-        model: StateSpaceModel,
-        x: np.ndarray,
-        z: np.ndarray
+            self,
+            filter_gain: np.ndarray,
+            x_cov_predicted: np.ndarray,
+            z_cov_predicted: np.ndarray,
+            model: StateSpaceModel,
+            x: np.ndarray,
+            z: np.ndarray
     ) -> np.ndarray:
         pass
 
@@ -879,10 +893,10 @@ class CubatureTransformFilter(LocalApproximationKalmanFilter):
 
     @abstractmethod
     def eval_x_cov_predicted(
-        self, cubature_set_size: int,
-        model: StateSpaceModel,
-        x_mean_predicted: np.ndarray,
-        x_predicted: np.ndarray
+            self, cubature_set_size: int,
+            model: StateSpaceModel,
+            x_mean_predicted: np.ndarray,
+            x_predicted: np.ndarray
     ) -> np.ndarray:
         pass
 
@@ -917,13 +931,13 @@ class Ckf(CubatureTransformFilter):
         return "Cubature Kalman Filter"
 
     def estimate(
-        self,
-        state: np.ndarray,
-        cov_state: np.ndarray,
-        observation: np.ndarray,
-        model: StateSpaceModel,
-        ctrl_x: Optional[np.ndarray],
-        ctrl_z: Optional[np.ndarray]
+            self,
+            state: np.ndarray,
+            cov_state: np.ndarray,
+            observation: np.ndarray,
+            model: StateSpaceModel,
+            ctrl_x: Optional[np.ndarray],
+            ctrl_z: Optional[np.ndarray]
     ) -> KalmanFilterResult:
         """
         Estimates state mean (x(k)) and covariance (cov_x(k)) of dynamic system at time k
@@ -960,16 +974,19 @@ class Ckf(CubatureTransformFilter):
         cubature_set_x = np.tile(state, (1, cubature_set_size)) + offset_x @ np.hstack((np.eye(x_dim), -np.eye(x_dim)))
 
         # Propagate state cubature points through state model
-        x_predicted = model.transition_func(cubature_set_x, np.tile(model.state_noise.mean, (1, cubature_set_size)), ctrl_x)
+        x_predicted = model.transition_func(cubature_set_x, np.tile(model.state_noise.mean, (1, cubature_set_size)),
+                                            ctrl_x)
         x_mean_predicted = np.sum(x_predicted, axis=1) / cubature_set_size
         x_cov_predicted = self.eval_x_cov_predicted(cubature_set_size, model, x_mean_predicted, x_predicted)
 
         # Generate cubature points for the observations
         offset_z = self.eval_offset_z(cubature_set_size, x_cov_predicted)
-        cubature_set_z = np.tile(x_mean_predicted, (1, cubature_set_size)) + offset_z @ np.hstack((np.eye(x_dim), -np.eye(x_dim)))
+        cubature_set_z = np.tile(x_mean_predicted, (1, cubature_set_size)) + offset_z @ np.hstack(
+            (np.eye(x_dim), -np.eye(x_dim)))
 
         # Propagate observation cubature points through observation model
-        z_predicted = model.observation_func(cubature_set_z, np.tile(model.observation_noise.mean, (1, cubature_set_size)), ctrl_z)
+        z_predicted = model.observation_func(cubature_set_z,
+                                             np.tile(model.observation_noise.mean, (1, cubature_set_size)), ctrl_z)
         z_mean_predicted = np.sum(z_predicted, axis=1) / cubature_set_size
 
         # Correction (measurement update)
@@ -997,13 +1014,13 @@ class Ckf(CubatureTransformFilter):
         return state_new, state_cov_new, internal_vars
 
     def estimate_state_cov(
-        self,
-        filter_gain: np.ndarray,
-        x_cov_predicted: np.ndarray,
-        z_cov_predicted: np.ndarray,
-        model: StateSpaceModel,
-        x: np.ndarray,
-        z: np.ndarray
+            self,
+            filter_gain: np.ndarray,
+            x_cov_predicted: np.ndarray,
+            z_cov_predicted: np.ndarray,
+            model: StateSpaceModel,
+            x: np.ndarray,
+            z: np.ndarray
     ) -> np.ndarray:
         return x_cov_predicted - filter_gain @ z_cov_predicted @ filter_gain.T
 
@@ -1018,13 +1035,14 @@ class Ckf(CubatureTransformFilter):
         return m_utils.svd_sqrt(x_cov_predicted) * np.sqrt(cubature_set_size / 2)
 
     def eval_x_cov_predicted(
-        self,
-        cubature_set_size: int,
-        model: StateSpaceModel,
-        x_mean_predicted: np.ndarray,
-        x_predicted: np.ndarray
+            self,
+            cubature_set_size: int,
+            model: StateSpaceModel,
+            x_mean_predicted: np.ndarray,
+            x_predicted: np.ndarray
     ) -> np.ndarray:
-        x_predicted_centered = (x_predicted - np.tile(x_mean_predicted, (1, cubature_set_size))) / np.sqrt(cubature_set_size)
+        x_predicted_centered = (x_predicted - np.tile(x_mean_predicted, (1, cubature_set_size))) / np.sqrt(
+            cubature_set_size)
         x_cov_predicted = x_predicted_centered @ x_predicted_centered.T + model.state_noise.covariance
         return x_cov_predicted
 
@@ -1062,15 +1080,16 @@ class SrCkf(Ckf):
         return "SR Cubature Kalman Filter"
 
     def estimate_state_cov(
-        self,
-        filter_gain: np.ndarray,
-        x_cov_predicted: np.ndarray,
-        z_cov_predicted: np.ndarray,
-        model: StateSpaceModel,
-        x: np.ndarray,
-        z: np.ndarray
+            self,
+            filter_gain: np.ndarray,
+            x_cov_predicted: np.ndarray,
+            z_cov_predicted: np.ndarray,
+            model: StateSpaceModel,
+            x: np.ndarray,
+            z: np.ndarray
     ) -> np.ndarray:
-        _, sqrt_state_cov_new = np.linalg.qr(np.hstack((x - filter_gain @ z, filter_gain @ model.observation_noise.covariance)).T)
+        _, sqrt_state_cov_new = np.linalg.qr(
+            np.hstack((x - filter_gain @ z, filter_gain @ model.observation_noise.covariance)).T)
         return sqrt_state_cov_new.T
 
     def eval_filter_gain(self, cross_cov: np.ndarray, z_cov_predicted: np.ndarray) -> np.ndarray:
@@ -1084,8 +1103,10 @@ class SrCkf(Ckf):
     def eval_offset_z(self, cubature_set_size: np.ndarray, x_cov_predicted: np.ndarray) -> np.ndarray:
         return x_cov_predicted * np.sqrt(cubature_set_size / 2)
 
-    def eval_x_cov_predicted(self, cubature_set_size: int, model: StateSpaceModel, x_mean_predicted: np.ndarray, x_predicted: np.ndarray) -> np.ndarray:
-        x_weighted_centered_set = (x_predicted - np.tile(x_mean_predicted, (1, cubature_set_size))) / np.sqrt(cubature_set_size)
+    def eval_x_cov_predicted(self, cubature_set_size: int, model: StateSpaceModel, x_mean_predicted: np.ndarray,
+                             x_predicted: np.ndarray) -> np.ndarray:
+        x_weighted_centered_set = (x_predicted - np.tile(x_mean_predicted, (1, cubature_set_size))) / np.sqrt(
+            cubature_set_size)
         _, x_cov_predicted_sqrt = np.linalg.qr(np.hstack((x_weighted_centered_set, model.state_noise.covariance)).T)
         return x_cov_predicted_sqrt.T
 
@@ -1116,13 +1137,13 @@ class HdLkf(LocalApproximationKalmanFilter):
     """
 
     def estimate(
-        self,
-        state: np.ndarray,
-        cov_state: np.ndarray,
-        observation: np.ndarray,
-        model: StateSpaceModel,
-        ctrl_x: Optional[np.ndarray],
-        ctrl_z: Optional[np.ndarray]
+            self,
+            state: np.ndarray,
+            cov_state: np.ndarray,
+            observation: np.ndarray,
+            model: StateSpaceModel,
+            ctrl_x: Optional[np.ndarray],
+            ctrl_z: Optional[np.ndarray]
     ) -> KalmanFilterResult:
         """
         Estimates state mean (x(k)) and covariance (cov_x(k)) of dynamic system at time k
@@ -1594,10 +1615,10 @@ class Pf(PdfApproximationKalmanFilter):
     """
 
     def __init__(
-        self,
-        resample_threshold: float,
-        estimate_type: Union[EstimateType, None] = None,
-        resample_strategy: Union[ResampleStrategy, None] = None
+            self,
+            resample_threshold: float,
+            estimate_type: Union[EstimateType, None] = None,
+            resample_strategy: Union[ResampleStrategy, None] = None
     ):
         super().__init__(estimate_type)
         self._resample_threshold = resample_threshold
@@ -1611,12 +1632,12 @@ class Pf(PdfApproximationKalmanFilter):
         )
 
     def estimate(
-        self,
-        data_set: BootstrapDataSet,
-        observation: np.ndarray,
-        model: StateSpaceModel,
-        ctrl_x: Optional[np.ndarray],
-        ctrl_z: Optional[np.ndarray]
+            self,
+            data_set: BootstrapDataSet,
+            observation: np.ndarray,
+            model: StateSpaceModel,
+            ctrl_x: Optional[np.ndarray],
+            ctrl_z: Optional[np.ndarray]
     ) -> Tuple[np.ndarray, BootstrapDataSet]:
         """
         Estimates state mean (x(k))of dynamic system at time k based on noisy observations starting at time k (z(k)).
@@ -1698,11 +1719,11 @@ class Gspf(PdfApproximationKalmanFilter):
     """
 
     def __init__(
-        self,
-        resample_threshold: float,
-        n_samples: int,
-        estimate_type: Union[EstimateType, None] = None,
-        resample_strategy: Union[ResampleStrategy, None] = None
+            self,
+            resample_threshold: float,
+            n_samples: int,
+            estimate_type: Union[EstimateType, None] = None,
+            resample_strategy: Union[ResampleStrategy, None] = None
     ):
         super().__init__(estimate_type)
         self._resample_threshold = resample_threshold
@@ -1718,12 +1739,12 @@ class Gspf(PdfApproximationKalmanFilter):
         )
 
     def estimate(
-        self,
-        gmi: GaussianMixtureInfo,
-        observation: np.ndarray,
-        model: StateSpaceModel,
-        ctrl_x: Optional[np.ndarray],
-        ctrl_z: Optional[np.ndarray]
+            self,
+            gmi: GaussianMixtureInfo,
+            observation: np.ndarray,
+            model: StateSpaceModel,
+            ctrl_x: Optional[np.ndarray],
+            ctrl_z: Optional[np.ndarray]
     ) -> Tuple[np.ndarray, GaussianMixtureInfo]:
         """
         Estimates state mean (x(k))of dynamic system at time k based on noisy observations starting at time k (z(k)).
@@ -1745,62 +1766,64 @@ class Gspf(PdfApproximationKalmanFilter):
         """
         n_components = gmi.n_components * model.state_noise.n_components
 
-        # sample buffer: number of mixture components * state dimension * number of samples
-        x_buf1 = np.random.randn(gmi.n_components, model.state_dim, self._n_samples)
-        x_buf2 = np.zeros((n_components, model.state_dim, self._n_samples))
-        x_buf3 = np.zeros((n_components, model.state_dim, self._n_samples))
-
         x_weights_new = np.zeros(n_components)
-        importance_w = np.zeros((n_components, self._n_samples))
         state_mean_new = np.zeros((n_components, model.state_dim))
         state_sqrt_cov_new = np.zeros((n_components, model.state_dim, model.state_dim))
 
         # Time update (prediction)
+        x_current_buf = np.random.randn(gmi.n_components, model.state_dim, self._n_samples)
         for g in range(gmi.n_components):
-            mean_g = np.tile(gmi.means_[g, :], (1, self._n_samples))
-            x_buf1[g, :, :] = gmi.sqrt_covariances_[g, :, :] @ x_buf1[g, :, :] + mean_g
+            mean_g = np.tile(gmi.means_[g, :], (model.state_dim, self._n_samples))
+            x_current_buf[g, :, :] = gmi.sqrt_covariances_[g, :, :] @ x_current_buf[g, :, :] + mean_g
 
+        x_predicted_buf = np.zeros((n_components, model.state_dim, self._n_samples))
         noise_buf = np.random.randn(n_components, model.state_dim, self._n_samples)
+        x_current_buf_m = np.zeros(n_components)  # TODO
+        x_current_buf_c = np.zeros(n_components)  # TODO
         for k in range(model.state_noise.n_components):
-            mean_k = np.tile(model.state_noise.mean[k, :], (1, self._n_samples))
+            mean_k = np.tile(model.state_noise.mean[k, :], (model.state_dim, self._n_samples))
             for g in range(gmi.n_components):
                 gk = g + k * gmi.n_components
                 x_noise_buf = model.state_noise.covariance[k, :, :] @ noise_buf[gk, :, :] + mean_k
-                x_buf2[gk, :, :] = model.transition_func(x_buf1[g, :, :], x_noise_buf, ctrl_x)
+                x_predicted_buf[gk, :, :] = model.transition_func(x_current_buf[g, :, :], x_noise_buf, ctrl_x)
                 x_weights_new[gk] = gmi.weights_[g] * model.state_noise.weights[k]
+                x_current_buf_m[gk] = np.mean(x_predicted_buf[gk, :, :])  # TODO
+                x_current_buf_c[gk] = np.cov(x_predicted_buf[gk, :, :])  # TODO
 
         x_weights_new /= np.sum(x_weights_new)
 
         for g in range(n_components):
-            mean_component_g = np.sum(x_buf2[g, :, :], 1) / self._n_samples
+            mean_component_g = np.sum(x_predicted_buf[g, :, :], 1) / self._n_samples
             state_mean_new[g, :] = mean_component_g
             x_diff = np.transpose(
-                x_buf2[g, :, :] - np.tile(mean_component_g, (1, self._n_samples))
+                x_predicted_buf[g, :, :] - np.tile(mean_component_g, (1, self._n_samples))
             )
             _, cov_sqrt_g = np.linalg.qr(x_diff)
             state_sqrt_cov_new[g, :, :] = np.transpose(cov_sqrt_g) / np.sqrt(self._n_samples - 1)
 
         # Observation / measurement update (correction)
+        z_expected_buf = np.zeros((n_components, model.state_dim, self._n_samples))
+        importance_w = np.zeros((n_components, self._n_samples))
         obs = np.tile(observation, (1, self._n_samples))
         noise_buf = np.random.randn(n_components, model.state_dim, self._n_samples)
         for g in range(n_components):
             mean_component_g = np.tile(state_mean_new[g, :], (1, self._n_samples))
-            x_buf3[g, :, :] = state_sqrt_cov_new[g, :, :] @ noise_buf[g, :, :] + mean_component_g
-            importance_w[g, :] = model.likelihood(obs, x_buf3[g, :, :], ctrl_z) + 1e-99
+            z_expected_buf[g, :, :] = state_sqrt_cov_new[g, :, :] @ noise_buf[g, :, :] + mean_component_g
+            importance_w[g, :] = model.likelihood(obs, z_expected_buf[g, :, :], ctrl_z) + 1e-99
 
         weight_norm = 0
         for g in range(n_components):
             tmp_w = importance_w[g, :]
             tmp_weights_volume = np.sum(tmp_w)
             mean_component_g = np.sum(
-                np.tile(tmp_w, (model.state_dim, 1)) * x_buf3[g, :, :], 1
+                np.tile(tmp_w, (model.state_dim, 1)) * z_expected_buf[g, :, :], 1
             ) / tmp_weights_volume
 
             state_mean_new[g, :] = mean_component_g
 
             w = np.tile(np.sqrt(tmp_w), (model.state_dim, 1))
             x_diff = np.transpose(
-                (w * (x_buf3[g, :, :] - np.tile(mean_component_g, (1, self._n_samples))))
+                (w * (z_expected_buf[g, :, :] - np.tile(mean_component_g, (1, self._n_samples))))
             )
             _, cov_sqrt_g = np.linalg.qr(x_diff)
             state_sqrt_cov_new[g, :, :] = np.transpose(cov_sqrt_g) / np.sqrt(tmp_weights_volume)
@@ -1820,14 +1843,15 @@ class Gspf(PdfApproximationKalmanFilter):
                 1
             )
         else:
-            raise Exception("unknown estimate type".format(self._estimate_type))
+            raise Exception("Estimate type '{0}' is not supported".format(self._estimate_type))
 
         idx = self.resample_mixture_components(n_components, gmi.n_components, x_weights_new)
 
         gmi.set_params(
             state_mean_new[idx, :],
             state_sqrt_cov_new[idx, :, :],
-            np.ones((gmi.n_components,)) / gmi.n_components
+            np.ones((gmi.n_components,)) / gmi.n_components,
+            CovarianceType.sqrt
         )
 
         return np.array(estimate).flatten(), gmi

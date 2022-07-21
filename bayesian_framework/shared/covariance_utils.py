@@ -61,7 +61,8 @@ def to_covariance_with_type(cov: np.ndarray, source_cov_type: CovarianceType, ta
     target_is_sqrt_like = is_sqrt_like(target_cov_type)
 
     res = to_mixture_sqrt_covariance(cov, source_cov_type) if target_is_sqrt_like else to_mixture_full_covariance(cov, source_cov_type)
-    return np.atleast_2d(np.squeeze(res))
+    is_mixture = cov.ndim == 3
+    return res if is_mixture else np.atleast_2d(np.squeeze(res))
 
 
 def prepare_cov_for_estimation(cov: np.ndarray, filter_type: BayesianFilterType) -> np.ndarray:
