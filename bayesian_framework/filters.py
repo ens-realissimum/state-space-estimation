@@ -399,11 +399,11 @@ class UnscentedTransformFilter(LocalApproximationKalmanFilter):
         pass
 
     @abstractmethod
-    def eval_z_cov_predicted(self, model: StateSpaceModel, w: np.ndarray, z_centered: np.ndarray) -> np.ndarray:
+    def eval_z_cov_predicted(self, model: StateSpaceModel, w: np.ndarray, z_dev: np.ndarray) -> np.ndarray:
         pass
 
     @abstractmethod
-    def eval_x_cov_predicted(self, w: np.ndarray, x_centered: np.ndarray) -> np.ndarray:
+    def eval_x_cov_predicted(self, w: np.ndarray, x_dev: np.ndarray) -> np.ndarray:
         pass
 
     @abstractmethod
@@ -502,17 +502,17 @@ class Ukf(UnscentedTransformFilter):
         # Propagate sigma points through state model
         x_predicted = model.transition_func(sigma_points[:x_dim, :], sigma_points[x_dim:x_dim + v_dim, :], ctrl_x)
         x_mean_predicted = w[0] * x_predicted[:, 0] + w[1] * np.sum(x_predicted[:, 1:], axis=1)
-        x_centered = x_predicted - np.tile(x_mean_predicted, sigma_set_size)
-        x_cov_predicted = self.eval_x_cov_predicted(w, x_centered)
+        x_dev = x_predicted - np.tile(x_mean_predicted, sigma_set_size)
+        x_cov_predicted = self.eval_x_cov_predicted(w, x_dev)
 
         # Propagate sigma points through observation model
         z_predicted = model.observation_func(x_predicted, sigma_points[x_dim + v_dim:, :], ctrl_z)
         z_mean_predicted = w[0] * z_predicted[:, 0] + w[1] * np.sum(z_predicted[:, 1:], axis=1)
-        z_centered = z_predicted - np.tile(z_mean_predicted, sigma_set_size)
-        z_cov_predicted = self.eval_z_cov_predicted(model, w, z_centered)
+        z_dev = z_predicted - np.tile(z_mean_predicted, sigma_set_size)
+        z_cov_predicted = self.eval_z_cov_predicted(model, w, z_dev)
 
         # Correction (measurement update)
-        cross_cov = w[2] * x_centered[:, 0] @ z_centered[:, 0].T + w[1] * x_centered[:, 1:] @ z_centered[:, 1:].T
+        cross_cov = w[2] * x_dev[:, 0] @ z_dev[:, 0].T + w[1] * x_dev[:, 1:] @ z_dev[:, 1:].T
         filter_gain = self.eval_filter_gain(cross_cov, z_cov_predicted)
         innovation = model.innovation(observation, z_mean_predicted)
 
@@ -541,12 +541,12 @@ class Ukf(UnscentedTransformFilter):
     def eval_filter_gain(self, cross_cov: np.ndarray, z_cov_predicted: np.ndarray) -> np.ndarray:
         return m_utils.matrix_right_divide(cross_cov, z_cov_predicted)
 
-    def eval_z_cov_predicted(self, model: StateSpaceModel, w: np.ndarray, z_centered: np.ndarray) -> np.ndarray:
-        return w[2] * z_centered[:, 0] @ z_centered[:, 0].T + w[1] * z_centered[:, 1:] @ z_centered[:,
+    def eval_z_cov_predicted(self, model: StateSpaceModel, w: np.ndarray, z_dev: np.ndarray) -> np.ndarray:
+        return w[2] * z_dev[:, 0] @ z_dev[:, 0].T + w[1] * z_dev[:, 1:] @ z_dev[:,
                                                                                          1:].T + model.observation_noise.covariance
 
-    def eval_x_cov_predicted(self, w: np.ndarray, x_centered: np.ndarray) -> np.ndarray:
-        return w[2] * x_centered[:, 0] @ x_centered[:, 0].T + w[1] * x_centered[:, 1:] @ x_centered[:, 1:].T
+    def eval_x_cov_predicted(self, w: np.ndarray, x_dev: np.ndarray) -> np.ndarray:
+        return w[2] * x_dev[:, 0] @ x_dev[:, 0].T + w[1] * x_dev[:, 1:] @ x_dev[:, 1:].T
 
     def eval_sigma_points_offset(self, augment_dim: int, cov_state: np.ndarray, model: StateSpaceModel) -> np.ndarray:
         return m_utils.put_matrices_into_zero_matrix_one_by_one(
@@ -607,23 +607,23 @@ class SrUkf(Ukf):
         cross_cov_on_sqrt_z_cov = m_utils.matrix_right_divide(cross_cov, z_cov_predicted.T)
         return m_utils.matrix_right_divide(cross_cov_on_sqrt_z_cov, z_cov_predicted)
 
-    def eval_z_cov_predicted(self, model: StateSpaceModel, w: np.ndarray, z_centered: np.ndarray) -> np.ndarray:
+    def eval_z_cov_predicted(self, model: StateSpaceModel, w: np.ndarray, z_dev: np.ndarray) -> np.ndarray:
         sqrt_w = np.sqrt(np.abs(w))
         _, z_cov_predicted = np.linalg.qr(
             np.vstack(
                 (
-                    sqrt_w[1] * z_centered[:, 1:].T, model.observation_noise.covariance
+                    sqrt_w[1] * z_dev[:, 1:].T, model.observation_noise.covariance
                 )
             )
         )
-        z_cov_predicted = m_utils.cholesky_update(z_cov_predicted, sqrt_w[2] * z_centered[:, 0],
+        z_cov_predicted = m_utils.cholesky_update(z_cov_predicted, sqrt_w[2] * z_dev[:, 0],
                                                   "+" if w[2] > 0 else "-")
         return z_cov_predicted.T  # should be lowered triangle
 
-    def eval_x_cov_predicted(self, w: np.ndarray, x_centered: np.ndarray) -> np.ndarray:
+    def eval_x_cov_predicted(self, w: np.ndarray, x_dev: np.ndarray) -> np.ndarray:
         sqrt_w = np.sqrt(np.abs(w))
-        _, x_cov_predicted = np.linalg.qr((sqrt_w[1] * x_centered[:, 1:]).T)
-        return m_utils.cholesky_update(x_cov_predicted, sqrt_w[2] * x_centered[:, 0], "+" if w[2] > 0 else "-")
+        _, x_cov_predicted = np.linalg.qr((sqrt_w[1] * x_dev[:, 1:]).T)
+        return m_utils.cholesky_update(x_cov_predicted, sqrt_w[2] * x_dev[:, 0], "+" if w[2] > 0 else "-")
 
     def eval_sigma_points_offset(self, augment_dim: int, cov_state: np.ndarray, model: StateSpaceModel) -> np.ndarray:
         return m_utils.put_matrices_into_zero_matrix_one_by_one(
@@ -1041,9 +1041,8 @@ class Ckf(CubatureTransformFilter):
             x_mean_predicted: np.ndarray,
             x_predicted: np.ndarray
     ) -> np.ndarray:
-        x_predicted_centered = (x_predicted - np.tile(x_mean_predicted, (1, cubature_set_size))) / np.sqrt(
-            cubature_set_size)
-        x_cov_predicted = x_predicted_centered @ x_predicted_centered.T + model.state_noise.covariance
+        x_predicted_dev = (x_predicted - np.tile(x_mean_predicted, (1, cubature_set_size))) / np.sqrt(cubature_set_size)
+        x_cov_predicted = x_predicted_dev @ x_predicted_dev.T + model.state_noise.covariance
         return x_cov_predicted
 
     def evaluate_x_offset(self, cov_state: np.ndarray, cubature_set_size: int) -> np.ndarray:
@@ -1105,9 +1104,8 @@ class SrCkf(Ckf):
 
     def eval_x_cov_predicted(self, cubature_set_size: int, model: StateSpaceModel, x_mean_predicted: np.ndarray,
                              x_predicted: np.ndarray) -> np.ndarray:
-        x_weighted_centered_set = (x_predicted - np.tile(x_mean_predicted, (1, cubature_set_size))) / np.sqrt(
-            cubature_set_size)
-        _, x_cov_predicted_sqrt = np.linalg.qr(np.hstack((x_weighted_centered_set, model.state_noise.covariance)).T)
+        x_weighted_dev_set = (x_predicted - np.tile(x_mean_predicted, (1, cubature_set_size))) / np.sqrt(cubature_set_size)
+        _, x_cov_predicted_sqrt = np.linalg.qr(np.hstack((x_weighted_dev_set, model.state_noise.covariance)).T)
         return x_cov_predicted_sqrt.T
 
     def evaluate_x_offset(self, cov_state: np.ndarray, cubature_set_size: int) -> np.ndarray:
@@ -1185,8 +1183,8 @@ class HdLkf(LocalApproximationKalmanFilter):
         # Propagate state points through state model
         x_predicted = model.transition_func(set_x, np.tile(model.state_noise.mean, (1, set_size)), ctrl_x)
         x_mean_predicted = x_predicted @ w
-        x_centered_predicted = x_predicted - np.tile(x_mean_predicted, (1, set_size))
-        x_cov_predicted = w_x * x_centered_predicted @ x_centered_predicted.T + model.state_noise.covariance
+        x_predicted_dev = x_predicted - np.tile(x_mean_predicted, (1, set_size))
+        x_cov_predicted = w_x * x_predicted_dev @ x_predicted_dev.T + model.state_noise.covariance
 
         # Generate points for the observations
         offset_z = np.linalg.cholesky(x_cov_predicted) @ points
@@ -1197,9 +1195,9 @@ class HdLkf(LocalApproximationKalmanFilter):
         z_mean_predicted = z_predicted @ w
 
         # Correction (measurement update)
-        z_centered = z_predicted - np.tile(z_mean_predicted, (1, set_size))
-        innovation_cov = w_z * z_centered @ z_centered.T + model.observation_noise.covariance
-        cross_cov = w_x * (set_z - np.tile(x_mean_predicted, (1, set_size))) @ z_centered.T
+        z_dev = z_predicted - np.tile(z_mean_predicted, (1, set_size))
+        innovation_cov = w_z * z_dev @ z_dev.T + model.observation_noise.covariance
+        cross_cov = w_x * (set_z - np.tile(x_mean_predicted, (1, set_size))) @ z_dev.T
         filter_gain = cross_cov @ np.linalg.pinv(innovation_cov)
 
         innovation = model.innovation(observation, z_mean_predicted)
