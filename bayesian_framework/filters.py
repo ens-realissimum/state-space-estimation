@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import sys
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from enum import Enum
@@ -1773,8 +1774,6 @@ class Gspf(PdfApproximationKalmanFilter):
 
         x_predicted_buf = np.zeros((n_components, model.state_dim, self._n_samples))
         noise_buf = np.random.randn(n_components, model.state_dim, self._n_samples)
-        x_current_buf_m = np.zeros(n_components)  # TODO
-        x_current_buf_c = np.zeros(n_components)  # TODO
         for k in range(model.state_noise.n_components):
             mean_k = np.tile(model.state_noise.mean[k, :], (model.state_dim, self._n_samples))
             for g in range(gmi.n_components):
@@ -1782,8 +1781,6 @@ class Gspf(PdfApproximationKalmanFilter):
                 x_noise_buf = model.state_noise.covariance[k, :, :] @ noise_buf[gk, :, :] + mean_k
                 x_predicted_buf[gk, :, :] = model.transition_func(x_current_buf[g, :, :], x_noise_buf, ctrl_x)
                 x_weights_new[gk] = gmi.weights[g] * model.state_noise.weights[k]
-                x_current_buf_m[gk] = np.mean(x_predicted_buf[gk, :, :])  # TODO
-                x_current_buf_c[gk] = np.cov(x_predicted_buf[gk, :, :])  # TODO
 
         x_weights_new /= np.sum(x_weights_new)
 
@@ -1795,30 +1792,28 @@ class Gspf(PdfApproximationKalmanFilter):
             state_sqrt_cov_new[g, :, :] = np.transpose(cov_sqrt_g) / np.sqrt(self._n_samples - 1)
 
         # Observation / measurement update (correction)
-        z_expected_buf = np.zeros((n_components, model.state_dim, self._n_samples))
+        x_buf = np.zeros((n_components, model.state_dim, self._n_samples))
         importance_w = np.zeros((n_components, self._n_samples))
         obs = np.tile(observation, (1, self._n_samples))
         noise_buf = np.random.randn(n_components, model.state_dim, self._n_samples)
-        importance_w_max = np.zeros((16,))  # TODO:
         for g in range(n_components):
             mean_component_g = np.tile(state_mean_new[g, :], (1, self._n_samples))
-            z_expected_buf[g, :, :] = state_sqrt_cov_new[g, :, :] @ noise_buf[g, :, :] + mean_component_g
-            importance_w[g, :] = model.likelihood(obs, z_expected_buf[g, :, :], ctrl_z)
-            importance_w_max[g] = np.max(importance_w[g, :])  # TODO:
+            x_buf[g, :, :] = state_sqrt_cov_new[g, :, :] @ noise_buf[g, :, :] + mean_component_g
+            importance_w[g, :] = model.likelihood(obs, x_buf[g, :, :], ctrl_z) + sys.float_info.epsilon
 
         weight_norm = 0
         for g in range(n_components):
             tmp_w = importance_w[g, :]
             tmp_weights_cum = np.sum(tmp_w)
             mean_component_g = np.sum(
-                np.tile(tmp_w, (model.state_dim, 1)) * z_expected_buf[g, :, :], 1
+                np.tile(tmp_w, (model.state_dim, 1)) * x_buf[g, :, :], 1
             ) / tmp_weights_cum
 
             state_mean_new[g, :] = mean_component_g
 
             w = np.tile(np.sqrt(tmp_w), (model.state_dim, 1))
             x_diff = np.transpose(
-                (w * (z_expected_buf[g, :, :] - np.tile(mean_component_g, (1, self._n_samples))))
+                (w * (x_buf[g, :, :] - np.tile(mean_component_g, (1, self._n_samples))))
             )
             _, cov_sqrt_g = np.linalg.qr(x_diff)
             state_sqrt_cov_new[g, :, :] = cov_sqrt_g.T / np.sqrt(tmp_weights_cum)

@@ -375,7 +375,10 @@ class GaussianMixtureStochasticModel(GeneralStochasticModel):
         )
 
     def likelihood(self, samples: np.ndarray) -> np.ndarray:
-        # evidence is used as likelihood, because the total data probability for a given data vector X[i]
+        # evidence is used as likelihood, because
+        # i-th entry of evidence is the total data probability for a given data vector X[i],
+        # i.e. P(X[i]) = sum_over_all_j { P(X[i] | C[j]) }
+        # i.e. effectively it's a likelihood
         _, _, llh, _ = self.probability(samples)
         return np.atleast_1d(llh)
 
