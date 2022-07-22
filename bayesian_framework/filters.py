@@ -1762,7 +1762,8 @@ class Gspf(PdfApproximationKalmanFilter):
         :param ctrl_z: exogenous input to state observation function starting at time k, i.e. u2(k).
         :return: tuple of following elements:
             estimate: np array, estimates of state at time k, i.e. E[x(t)|z(1), z(2), ..., z(t)] for t = k;
-            data_set: BootstrapDataSet, updated Particle filter data structure. Contains set of particles as well as their corresponding weights.
+            data_set: BootstrapDataSet, updated Particle filter data structure. Contains set of particles
+             as well as their corresponding weights.
         """
         n_components = gmi.n_components * model.state_noise.n_components
 
