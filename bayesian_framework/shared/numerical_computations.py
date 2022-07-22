@@ -311,7 +311,7 @@ def get_one_dim_sparse_gauss_hermite_point(idx: np.ndarray, point: int, manner: 
             elif manner == 3:
                 n = 2 ** idx - 1
             else:
-                raise Exception('Not supported: manner = {0}'.format(manner))
+                raise Exception(f'Not supported: manner = {manner}')
 
             return eval_gauss_hermite_rule(n, None)
 

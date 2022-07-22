@@ -87,7 +87,7 @@ def cholesky_update(a: np.ndarray, x: np.ndarray, sign: str) -> np.ndarray:
         elif sign == '-':
             r = np.sqrt(result[k, k] ** 2 - x[k] ** 2)
         else:
-            raise Exception("unknown value of sign. sign = {0}".format(sign))
+            raise Exception(f"unknown value of sign. sign = {sign}")
 
         c = r / result[k, k]
         s = x[k] / result[k, k]

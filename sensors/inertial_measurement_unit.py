@@ -23,15 +23,15 @@ class GyroParams:
 
     def __str__(self):
         param_names = [
-            "g sensitive bias={0}".format(self.g_sensitive_bias),
-            "scale factor = {0}".format(self.scale_factor),
-            "noise std var = {0} rad".format(self.noise_std_var),
-            "bias mean = {0} rad".format(self.bias_mu),
-            "bias sigma = {0] rad".format(self.bias_sigma)
+            f"g sensitive bias={self.g_sensitive_bias}",
+            f"scale factor = {self.scale_factor}",
+            f"noise std var = {self.noise_std_var} rad",
+            f"bias mean = {self.bias_mu} rad",
+            f"bias sigma = {self.bias_sigma} rad"
         ]
 
-        params_str = ";{0}".format(linesep).join(param_names)
-        return "Gyro params:{0}{1}".format(linesep, params_str)
+        params_str = f";{linesep}".join(param_names)
+        return f"Gyro params:{linesep}{params_str}"
 
     def __post_init__(self):
         object.__setattr__(self, 'g_sensitive_bias', get_locked_copy(self.g_sensitive_bias))
@@ -51,15 +51,15 @@ class AccelerometerParams:
 
     def __str__(self):
         param_names = [
-            "level arm = {0}".format(self.level_arm),
-            "scale factor = {0}".format(self.scale_factor),
-            "noise std var = {0} km/sec**2".format(self.noise_std_var),
-            "bias mean = {0} km/sec**2".format(self.bias_mu),
-            "bias sigma = {0} km/sec**2".format(self.bias_sigma)
+            f"level arm = {self.level_arm}",
+            f"scale factor = {self.scale_factor}",
+            f"noise std var = {self.noise_std_var} km/sec**2",
+            f"bias mean = {self.bias_mu} km/sec**2",
+            f"bias sigma = {self.bias_sigma} km/sec**2"
         ]
 
-        param_str = ";{0}".format(linesep).join(param_names)
-        return "Accelerometer params: {0}{1}".format(linesep, param_str)
+        param_str = f";{linesep}".join(param_names)
+        return f"Accelerometer params: {linesep}{param_str}"
 
     def __post_init__(self):
         object.__setattr__(self, 'level_arm', get_locked_copy(self.level_arm))
@@ -100,7 +100,7 @@ class InertialMeasurementUnit:
         self._acc_bias_process = WienerProcessIterative(shift=accelerometer_params.bias_mu, delta=accelerometer_params.bias_sigma, dt=dt)
 
     def __str__(self):
-        return "Accelerometer params:{0}{1}Gyro params:{2}{3}".format(linesep, self._accelerometer_params, linesep, self._gyro_params)
+        return f"Accelerometer params:{linesep}{self._accelerometer_params}Gyro params:{linesep}{self._gyro_params}"
 
     def eval_angular_velocity(self, k: int) -> np.ndarray:
         """

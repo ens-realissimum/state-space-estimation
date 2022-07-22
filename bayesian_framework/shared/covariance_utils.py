@@ -16,7 +16,7 @@ def to_full_covariance(cov: np.ndarray, source_cov_type: CovarianceType) -> np.n
     elif source_cov_type == CovarianceType.sqrt:
         return cov @ cov.T.conj()
     else:
-        raise Exception("Not supported cov_type: {0}".format(source_cov_type.name))
+        raise Exception(f"Not supported cov_type: {source_cov_type.name}")
 
 
 def to_mixture_full_covariance(cov: np.ndarray, source_cov_type: CovarianceType) -> np.ndarray:
@@ -40,7 +40,7 @@ def to_sqrt_covariance(cov: np.ndarray, source_cov_type: CovarianceType) -> np.n
     elif source_cov_type == CovarianceType.sqrt:
         return cov
     else:
-        raise Exception("Not supported cov_type: {value}".format(value=source_cov_type.name))
+        raise Exception(f"Not supported cov_type: {source_cov_type.name}")
 
 
 def to_mixture_sqrt_covariance(cov: np.ndarray, source_cov_type: CovarianceType) -> np.ndarray:
@@ -72,4 +72,4 @@ def prepare_cov_for_estimation(cov: np.ndarray, filter_type: BayesianFilterType)
     if filter_type in linear_kalman_family or filter_type in sigma_point_family:
         return cov
 
-    raise Exception("not supported filter type: {0}".format(filter_type.name))
+    raise Exception(f"not supported filter type: {filter_type.name}")

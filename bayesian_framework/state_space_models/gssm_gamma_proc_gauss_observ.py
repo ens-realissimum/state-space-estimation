@@ -26,8 +26,8 @@ class GammaProcessWithGaussianObservationGssm(StateSpaceModel):
         self._phi = phi
 
     def __str__(self):
-        return "Gamma distributed state vector (dim: {0}) and observation (dim: {1}) with Gaussian noise" \
-            .format(self.state_dim, self.observation_dim)
+        return f"Gamma distributed state vector (dim: {self.state_dim}) and " \
+               f"observation (dim: {self.observation_dim}) with Gaussian noise"
 
     @property
     def type(self) -> str:
@@ -121,7 +121,7 @@ class GammaProcessWithGaussianObservationGssm(StateSpaceModel):
             jhw = [0, state ** 2] if control_z <= 30 else [0, state]
             return np.atleast_2d(jhw)
         else:
-            raise Exception("Unknown value of lin_type: {value}".format(value=lin_type.name))
+            raise Exception(f"Unknown value of lin_type: {lin_type.name}")
 
     def set_params(self, **kwargs) -> NoReturn:
         if "omega" in kwargs:

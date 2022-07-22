@@ -24,7 +24,7 @@ class WienerProcess:
         self._delta = delta
 
     def __str__(self):
-        return "Shift: {0}; Delta: {1}".format(self._shift, self._delta)
+        return f"Shift: {self._shift}; Delta: {self._delta}"
 
     def eval(self, dt: float, n: int) -> np.ndarray:
         """
@@ -122,7 +122,7 @@ class WienerProcessIterative(ProcessValueProvider):
         self._last_generated = np.nan
 
     def __str__(self):
-        return "Shift: {0}; Delta: {1}".format(self._shift, self._delta)
+        return f"Shift: {self._shift}; Delta: {self._delta}"
 
     def eval(self, k: int) -> np.ndarray:
         """

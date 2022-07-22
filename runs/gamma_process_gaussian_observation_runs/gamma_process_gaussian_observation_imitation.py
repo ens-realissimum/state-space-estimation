@@ -79,7 +79,7 @@ def run():
                 elif filter_type is BayesianFilterType.ekf:
                     spkf = bf.Ekf()
                 else:
-                    raise Exception("Not supported filter type: {0}".format(filter_type.name))
+                    raise Exception(f"Not supported filter type: {filter_type.name}")
 
                 if is_sqrt_sigma_point_filter(filter_type):
                     x_cov_est = np.linalg.cholesky(x_cov_est)
@@ -122,15 +122,15 @@ def run():
                 for k in range(1, data_points_count):
                     x_est[:, k], gmi = gspf.estimate(gmi, z[:, k], gmm_inference_model, u1[k - 1], u2[k])
             else:
-                raise Exception("Not supported filter type: {0}".format(filter_type.name))
+                raise Exception(f"Not supported filter type: {filter_type.name}")
 
             if draw_iterations and i == 1:
                 ax_a.plot(np.squeeze(x), linewidth=2.0, label="clean", linestyle="dashed")
                 ax_a.plot(np.squeeze(z), linewidth=2.0, label="noisy", linestyle="dotted")
-                ax_a.plot(np.squeeze(x_est), linewidth=2.0, label="{0} estimate".format(filter_type.name))
+                ax_a.plot(np.squeeze(x_est), linewidth=2.0, label=f"{filter_type.name} estimate")
                 ax_a.grid(True, which="both", axis="both")
                 ax_a.legend(loc="upper right")
-                ax_a.set_title("{0}: Nonlinear Time Variant State Estimation \n (non Gaussian noise)".format(filter_type.name), fontsize=12)
+                ax_a.set_title(f"{filter_type.name}: Nonlinear Time Variant State Estimation \n (non Gaussian noise)", fontsize=12)
                 plt.tight_layout()
                 fig_a.set_size_inches(8, 6)
                 fig_a.show()
@@ -138,7 +138,7 @@ def run():
             err_arr[i, :] = x_est[:, 1:] - x[:, 1:]
 
             if ((i + 1) * 100 / number_of_runs) % 10 == 0.0:
-                print("\t{0} % completed".format((i + 1) * 100 / number_of_runs))
+                print(f"\t{(i + 1) * 100 / number_of_runs} % completed")
 
         x_mean_err, std_x_err, rmse_x_err = stat_errors(err_arr)
 
@@ -153,6 +153,6 @@ def run():
 
         fig2, ax2 = plt.subplots()
         ax2.plot(rmse_x_err, color="g", linewidth=2.0)
-        ax2.set_title("{0}: RMSE (non Gaussian noise)".format(filter_type.name), fontsize=12)
+        ax2.set_title(f"{filter_type.name}: RMSE (non Gaussian noise)", fontsize=12)
         ax2.grid(True, which="both", axis="both")
         fig2.show()

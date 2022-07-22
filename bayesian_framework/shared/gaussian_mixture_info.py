@@ -12,13 +12,13 @@ class GaussianMixtureInfo:
             self,
             n_components: int,
             means: np.ndarray,
-            covariances: np.ndarray,
+            sqrt_covariances: np.ndarray,
             weights: np.ndarray
     ) -> None:
         super().__init__()
         self._n_components = n_components
         self._means_ = means
-        self._sqrt_covariances_ = covariances
+        self._sqrt_covariances_ = sqrt_covariances
         self._weights_ = weights
 
     @property
@@ -26,15 +26,15 @@ class GaussianMixtureInfo:
         return self._n_components
 
     @property
-    def means_(self) -> np.ndarray:
+    def means(self) -> np.ndarray:
         return self._means_
 
     @property
-    def sqrt_covariances_(self) -> np.ndarray:
+    def sqrt_covariances(self) -> np.ndarray:
         return self._sqrt_covariances_
 
     @property
-    def weights_(self) -> np.ndarray:
+    def weights(self) -> np.ndarray:
         return self._weights_
 
     def set_params(

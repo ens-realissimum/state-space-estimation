@@ -30,4 +30,4 @@ def build_filterable_model(gssm: StateSpaceModel, filter_type: ft.BayesianFilter
     if filter_type is ft.BayesianFilterType.pf:
         return gssm.clone(gssm.state_noise, gssm.observation_noise, gssm.reconcile_strategy)
 
-    raise Exception("not supported filter type: {0}".format(filter_type.name))
+    raise Exception(f"Not supported filter type: {filter_type.name}")

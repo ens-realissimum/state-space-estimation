@@ -5,7 +5,7 @@ from abc import ABC, abstractmethod
 from typing import NoReturn, Tuple, Union
 
 import numpy as np
-from scipy.stats import gamma, multivariate_normal, norm
+from scipy.stats import gamma, multivariate_normal
 
 import bayesian_framework.shared.covariance_utils as cov_utils
 import utils.matrix_utils as matrix_utils
@@ -113,7 +113,7 @@ class GammaStochasticModel(GeneralStochasticModel):
         self._scale = scale
 
     def __str__(self) -> str:
-        return "Gamma process. Shape: {shape}; Scale: {scale}".format(shape=self._shape, scale=self._scale)
+        return f"Gamma process. Shape: {self._shape}; Scale: {self._scale}"
 
     def likelihood(self, samples: np.ndarray) -> np.ndarray:
         if samples is None:
@@ -187,7 +187,7 @@ class GaussianStochasticModel(GeneralStochasticModel):
         )
 
     def __str__(self) -> str:
-        return "Gaussian noise. Mean: {mean}; Covariance: {cov}".format(mean=self._mean, cov=self._covariance_full)
+        return f"Gaussian noise. Mean: {self.mean}; Covariance: {self._covariance_full}"
 
     @property
     def noise_type(self) -> NoiseType:
@@ -216,7 +216,7 @@ class GaussianStochasticModel(GeneralStochasticModel):
 
     def likelihood(self, samples: np.ndarray) -> np.matrix:
         if samples is None:
-            raise Exception("<samples> should be n-dim numpy array")
+            raise Exception(f"<samples> should be {self.dim}-dim numpy array")
 
         return np.matrix(
             multivariate_normal.pdf(samples.T, mean=self._mean, cov=self._covariance_full)
@@ -235,7 +235,7 @@ class ComboGaussianStochasticModel(GeneralStochasticModel):
         cov = matrix_utils.put_matrices_into_zero_matrix_one_by_one(
             dimension,
             list(map(lambda x: x.covariance, sources))
-            )
+        )
         self._dimension = dimension
         self._covariance_type = sources[0].covariance_type
         self._mean = np.atleast_1d([sub_mean for source in sources for sub_mean in source.mean])
@@ -249,8 +249,7 @@ class ComboGaussianStochasticModel(GeneralStochasticModel):
             raise Exception("length of mean vector must be equal to dimension")
 
     def __str__(self) -> str:
-        return "Combo Gaussian.\nMean:\n {mean};\nCovariance:\n {cov}\n\n" \
-            .format(mean=self._mean, cov=self._covariance_full)
+        return f"Combo Gaussian.\nMean:\n {self.mean};\nCovariance:\n {self._covariance_full}\n\n"
 
     @property
     def noise_type(self) -> NoiseType:
@@ -294,7 +293,7 @@ class ComboGaussianStochasticModel(GeneralStochasticModel):
 
 class ComboStochasticModel(ComboGaussianStochasticModel):
     def __str__(self) -> str:
-        return "Combo noise.\nMean:\n {0};\nCovariance:\n {1}\n\n".format(self.mean, self._covariance_full)
+        return f"Combo noise.\nMean:\n {self.mean};\nCovariance:\n {self.covariance}\n\n"
 
     @property
     def noise_type(self) -> NoiseType:
@@ -334,8 +333,7 @@ class GaussianMixtureStochasticModel(GeneralStochasticModel):
         self._weights = np.ones(mixture_size) / mixture_size if weights is None else np.asarray(weights / sum(weights))
 
     def __str__(self) -> str:
-        return "Gaussian Mixture.\nWeights:\n {weights};\nMean:\n {mean};\nCovariance:\n {cov}\n\n" \
-            .format(mean=self._mean, cov=self._covariance_full, weights=self.weights)
+        return f"Gaussian Mixture.\nWeights:\n {self.weights};\nMean:\n {self._mean};\nCovariance:\n {self._covariance_full}\n\n"
 
     @property
     def noise_type(self) -> NoiseType:
@@ -428,9 +426,11 @@ class GaussianMixtureStochasticModel(GeneralStochasticModel):
     @staticmethod
     def from_gaussian(gauss_process: GaussianStochasticModel) -> GaussianMixtureStochasticModel:
         return GaussianMixtureStochasticModel(
-            mixture_size=1, mean=[gauss_process.mean],
-            covariance=[gauss_process.covariance], covariance_type=gauss_process.covariance_type
-            )
+            mixture_size=1,
+            mean=[gauss_process.mean],
+            covariance=[gauss_process.covariance],
+            covariance_type=gauss_process.covariance_type
+        )
 
 
 def build_stochastic_process(noise_type: NoiseType, **kwargs) -> GeneralStochasticModel:
@@ -445,4 +445,4 @@ def build_stochastic_process(noise_type: NoiseType, **kwargs) -> GeneralStochast
     elif noise_type == NoiseType.gaussian_mixture:
         return GaussianMixtureStochasticModel(**kwargs)
     else:
-        raise Exception("Not supported noise_type: {value}".format(value=noise_type.name))
+        raise Exception(f"Not supported noise_type: {noise_type.name}")

@@ -28,8 +28,9 @@ class CelestialBodyGravityInfo:
         self._state = kinematic_state
         self._mass = mass
 
+    @property
     def __str__(self):
-        return "Mass: {0} kg;{1}Kinematic state: {2}".format(self._mass, linesep, self._state)
+        return f"Mass: {self._mass} kg;{linesep}Kinematic state: {self._state}"
 
     @property
     def kinematic_state(self) -> KinematicState:
@@ -64,12 +65,8 @@ class NBodyProblemGravityAccelerationProvider(GravityAccelerationProvider):
         self._bodies = list(celestial_body).copy()
 
     def __str__(self) -> str:
-        return "N-body model with following bodies:{0}{1}".format(
-            linesep,
-            linesep.join(
-                map(lambda x: "Mass: {0}; Kinematic State: {1}".format(x.mass, x.kinematic_state), self._bodies)
-            )
-        )
+        state = linesep.join(map(lambda x: f"Mass: {x.mass}; Kinematic State: {x.kinematic_state}", self._bodies))
+        return f"N-body model with following bodies:{linesep}{state}"
 
     def eval_acceleration(self, gravity_info: CelestialBodyGravityInfo, dt: float) -> np.ndarray:
         accelerations = eval_n_body_gravity_acceleration(

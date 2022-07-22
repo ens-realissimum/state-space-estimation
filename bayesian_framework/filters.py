@@ -144,7 +144,7 @@ class PdfApproximationKalmanFilter(ABC):
         elif self._estimate_type is EstimateType.median:
             return np.median(np.tile(data_set.weights, (model.state_dim, 1)) * data_set.particles, axis=1)
         else:
-            raise Exception("unknown estimate type".format(self._estimate_type))
+            raise Exception(f"Unknown estimate type ('{self._estimate_type}')")
 
 
 class LinearKf(LocalApproximationKalmanFilter):
@@ -441,7 +441,7 @@ class Ukf(UnscentedTransformFilter):
         self._kappa = kappa
 
     def __str__(self):
-        return "UKF: alpha: {0}; beta: {1}; kappa: {2}".format(self._alpha, self._beta, self._kappa)
+        return f"UKF: alpha: {self._alpha}; beta: {self._beta}; kappa: {self._kappa}"
 
     def estimate(
             self,
@@ -591,7 +591,7 @@ class SrUkf(Ukf):
         super().__init__(alpha, beta, kappa)
 
     def __str__(self):
-        return "SRUKF: alpha: {0}; beta: {1}; kappa: {2}".format(self._alpha, self._beta, self._kappa)
+        return f"SRUKF: alpha: {self._alpha}; beta: {self._beta}; kappa: {self._kappa}"
 
     def estimate_state_cov(self, filter_gain: np.ndarray, x_cov_predicted: np.ndarray, z_cov_predicted: np.ndarray,
                            model: StateSpaceModel) -> np.ndarray:
@@ -675,7 +675,7 @@ class Cdkf(CentralDiffTransformFilter):
         self._scale_factor = scale_factor
 
     def __str__(self):
-        return "CDKF. scale factor: {0}".format(self._scale_factor)
+        return f"CDKF. scale factor: {self._scale_factor}"
 
     def estimate(
             self,
@@ -850,7 +850,7 @@ class SrCdkf(Cdkf):
         super().__init__(scale_factor)
 
     def __str__(self):
-        return "SR CDKF. Scale factor: {0}".format(self._scale_factor)
+        return f"SR CDKF. Scale factor: {self._scale_factor}"
 
     def repair_covariance(self, sqrt_state_cov_new: np.ndarray) -> np.ndarray:
         return sqrt_state_cov_new
@@ -1276,7 +1276,7 @@ class Cqkf(HdLkf):
         self._order = order
 
     def __str__(self):
-        return "Cubature Quadrature Kalman Filter. order: {0}".format(self._order)
+        return f"Cubature Quadrature Kalman Filter. order: {self._order}"
 
     def evaluate_points_and_weights(self, model: StateSpaceModel) -> Tuple[np.ndarray, np.ndarray]:
         return num_computations.eval_cubature_quadrature_points(model.state_dim, self._order)
@@ -1316,7 +1316,7 @@ class Ghqf(HdLkf):
         self._order = order
 
     def __str__(self):
-        return "Gauss-Hermite Quadrature Filter. order: {0}".format(self._order)
+        return f"Gauss-Hermite Quadrature Filter. order: {self._order}"
 
     def evaluate_points_and_weights(self, model: StateSpaceModel) -> Tuple[np.ndarray, np.ndarray]:
         return num_computations.eval_gauss_hermite_rule(self._order, model.state_dim)
@@ -1370,7 +1370,7 @@ class Sghqf(HdLkf):
         self._manner = manner
 
     def __str__(self):
-        return "Sparse Gauss-Hermite Quadrature Filter. order: {0}; manner: {1}".format(self._order, self._manner)
+        return f"Sparse Gauss-Hermite Quadrature Filter. order: {self._order}; manner: {self._manner}"
 
     def eval_set_size(self, model: StateSpaceModel) -> int:
         raise Exception("Not implemented yet")
@@ -1429,7 +1429,7 @@ class ResampleStrategy(ABC):
         elif resample_type is ResampleType.systematic:
             return SystematicResampleStrategy()
         else:
-            raise Exception("Unknown resampling type, i.e. resampling type {0} is not supported".format(type))
+            raise Exception(f"Unknown resampling type, i.e. resampling type {type} is not supported")
 
 
 class ResidualResampleStrategy(ResampleStrategy):
@@ -1623,11 +1623,9 @@ class Pf(PdfApproximationKalmanFilter):
         self._resample_strategy = resample_strategy if resample_strategy is not None else ResidualResample2Strategy()
 
     def __str__(self):
-        return "Resample threshold: {0}; Estimate type: {1}; Resampling method: {2}".format(
-            self._resample_threshold,
-            self._estimate_type,
-            self._resample_strategy
-        )
+        return f"Resample threshold: {self._resample_threshold}; " \
+               f"Estimate type: {self._estimate_type}; " \
+               f"Resampling method: {self._resample_strategy}"
 
     def estimate(
             self,
@@ -1729,12 +1727,10 @@ class Gspf(PdfApproximationKalmanFilter):
         self._resample_strategy = resample_strategy if resample_strategy is not None else ResidualResampleStrategy()
 
     def __str__(self):
-        return "Resample threshold: {0}; Estimate type: {1}; Resampling method: {2}; Particles count".format(
-            self._resample_threshold,
-            self._estimate_type,
-            self._resample_strategy,
-            self._n_samples
-        )
+        return f"Resample threshold: {self._resample_threshold}; " \
+               f"Estimate type: {self._estimate_type}; " \
+               f"Resampling method: {self._resample_strategy}; " \
+               f"Particles count: {self._n_samples}"
 
     def estimate(
             self,
@@ -1772,8 +1768,8 @@ class Gspf(PdfApproximationKalmanFilter):
         # Time update (prediction)
         x_current_buf = np.random.randn(gmi.n_components, model.state_dim, self._n_samples)
         for g in range(gmi.n_components):
-            mean_g = np.tile(gmi.means_[g, :], (model.state_dim, self._n_samples))
-            x_current_buf[g, :, :] = gmi.sqrt_covariances_[g, :, :] @ x_current_buf[g, :, :] + mean_g
+            mean_g = np.tile(gmi.means[g, :], (model.state_dim, self._n_samples))
+            x_current_buf[g, :, :] = gmi.sqrt_covariances[g, :, :] @ x_current_buf[g, :, :] + mean_g
 
         x_predicted_buf = np.zeros((n_components, model.state_dim, self._n_samples))
         noise_buf = np.random.randn(n_components, model.state_dim, self._n_samples)
@@ -1785,7 +1781,7 @@ class Gspf(PdfApproximationKalmanFilter):
                 gk = g + k * gmi.n_components
                 x_noise_buf = model.state_noise.covariance[k, :, :] @ noise_buf[gk, :, :] + mean_k
                 x_predicted_buf[gk, :, :] = model.transition_func(x_current_buf[g, :, :], x_noise_buf, ctrl_x)
-                x_weights_new[gk] = gmi.weights_[g] * model.state_noise.weights[k]
+                x_weights_new[gk] = gmi.weights[g] * model.state_noise.weights[k]
                 x_current_buf_m[gk] = np.mean(x_predicted_buf[gk, :, :])  # TODO
                 x_current_buf_c[gk] = np.cov(x_predicted_buf[gk, :, :])  # TODO
 
@@ -1794,10 +1790,8 @@ class Gspf(PdfApproximationKalmanFilter):
         for g in range(n_components):
             mean_component_g = np.sum(x_predicted_buf[g, :, :], 1) / self._n_samples
             state_mean_new[g, :] = mean_component_g
-            x_diff = np.transpose(
-                x_predicted_buf[g, :, :] - np.tile(mean_component_g, (1, self._n_samples))
-            )
-            _, cov_sqrt_g = np.linalg.qr(x_diff)
+            x_diff = x_predicted_buf[g, :, :] - np.tile(mean_component_g, (1, self._n_samples))
+            _, cov_sqrt_g = np.linalg.qr(x_diff.T)
             state_sqrt_cov_new[g, :, :] = np.transpose(cov_sqrt_g) / np.sqrt(self._n_samples - 1)
 
         # Observation / measurement update (correction)
@@ -1805,18 +1799,20 @@ class Gspf(PdfApproximationKalmanFilter):
         importance_w = np.zeros((n_components, self._n_samples))
         obs = np.tile(observation, (1, self._n_samples))
         noise_buf = np.random.randn(n_components, model.state_dim, self._n_samples)
+        importance_w_max = np.zeros((16,))  # TODO:
         for g in range(n_components):
             mean_component_g = np.tile(state_mean_new[g, :], (1, self._n_samples))
             z_expected_buf[g, :, :] = state_sqrt_cov_new[g, :, :] @ noise_buf[g, :, :] + mean_component_g
-            importance_w[g, :] = model.likelihood(obs, z_expected_buf[g, :, :], ctrl_z) + 1e-99
+            importance_w[g, :] = model.likelihood(obs, z_expected_buf[g, :, :], ctrl_z)
+            importance_w_max[g] = np.max(importance_w[g, :])  # TODO:
 
         weight_norm = 0
         for g in range(n_components):
             tmp_w = importance_w[g, :]
-            tmp_weights_volume = np.sum(tmp_w)
+            tmp_weights_cum = np.sum(tmp_w)
             mean_component_g = np.sum(
                 np.tile(tmp_w, (model.state_dim, 1)) * z_expected_buf[g, :, :], 1
-            ) / tmp_weights_volume
+            ) / tmp_weights_cum
 
             state_mean_new[g, :] = mean_component_g
 
@@ -1825,10 +1821,10 @@ class Gspf(PdfApproximationKalmanFilter):
                 (w * (z_expected_buf[g, :, :] - np.tile(mean_component_g, (1, self._n_samples))))
             )
             _, cov_sqrt_g = np.linalg.qr(x_diff)
-            state_sqrt_cov_new[g, :, :] = np.transpose(cov_sqrt_g) / np.sqrt(tmp_weights_volume)
+            state_sqrt_cov_new[g, :, :] = cov_sqrt_g.T / np.sqrt(tmp_weights_cum)
 
-            x_weights_new[g] *= tmp_weights_volume
-            weight_norm += tmp_weights_volume
+            x_weights_new[g] *= tmp_weights_cum
+            weight_norm += tmp_weights_cum
 
         x_weights_new /= weight_norm
         x_weights_new /= np.sum(x_weights_new)
@@ -1842,10 +1838,9 @@ class Gspf(PdfApproximationKalmanFilter):
                 1
             )
         else:
-            raise Exception("Estimate type '{0}' is not supported".format(self._estimate_type))
+            raise Exception(f"Estimate type '{self._estimate_type}' is not supported")
 
         idx = self.resample_mixture_components(n_components, gmi.n_components, x_weights_new)
-        print(idx)
         gmi.set_params(
             state_mean_new[idx, :],
             state_sqrt_cov_new[idx, :, :],

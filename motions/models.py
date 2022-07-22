@@ -25,12 +25,9 @@ class KinematicState:
         self._quaternion = deepcopy(quaternion)
 
     def __str__(self):
-        pattern = "Position: x={0} km, y={1} km, z={2} km; Velocity: vx={3} km/sec, vy={4} km/sec, vz={5} km/sec; Quaternion: qw={6}, qx={7}, qy={8}, qz={9}"
-        return pattern.format(
-            self._position[0], self._position[1], self._position[2],
-            self._velocity[0], self._velocity[1], self._velocity[2],
-            self._quaternion.w, self._quaternion.x, self._quaternion.y, self._quaternion.z
-        )
+        return f"Position: x={self._position[0]} km, y={self._position[1]} km, z={self._position[2]} km; " \
+               f"Velocity: vx={self._velocity[0]} km/sec, vy={self._velocity[1]} km/sec, vz={self._velocity[2]} km/sec; " \
+               f"Quaternion: qw={self._quaternion.w}, qx={self._quaternion.x}, qy={self._quaternion.y}, qz={self._quaternion.z}"
 
     @property
     def position(self) -> np.ndarray:
