@@ -265,7 +265,7 @@ class Kf(LinearKf):
         h = self.eval_h_matrix(model, x_predicted, ctrl_x, ctrl_z)
 
         z_cov_predicted = c @ x_cov_predicted @ c.T + h @ model.observation_noise.covariance @ h.T
-        filter_gain = m_utils.matrix_right_divide(x_cov_predicted @ c.T, z_cov_predicted)
+        filter_gain = m_utils.divide_inv(x_cov_predicted @ c.T, z_cov_predicted)
 
         z_predicted = model.observation_func(x_predicted, model.observation_noise.mean, ctrl_z)
         innovation = model.innovation(observation, z_predicted)
@@ -539,7 +539,7 @@ class Ukf(UnscentedTransformFilter):
         return x_cov_predicted - filter_gain @ z_cov_predicted @ filter_gain.T
 
     def eval_filter_gain(self, cross_cov: np.ndarray, z_cov_predicted: np.ndarray) -> np.ndarray:
-        return m_utils.matrix_right_divide(cross_cov, z_cov_predicted)
+        return m_utils.divide_inv(cross_cov, z_cov_predicted)
 
     def eval_z_cov_predicted(self, model: StateSpaceModel, w: np.ndarray, z_dev: np.ndarray) -> np.ndarray:
         return w[2] * z_dev[:, 0] @ z_dev[:, 0].T + w[1] * z_dev[:, 1:] @ z_dev[:,
@@ -604,8 +604,8 @@ class SrUkf(Ukf):
         return sqrt_cov_state_new.T  # should be lowered triangle
 
     def eval_filter_gain(self, cross_cov: np.ndarray, z_cov_predicted: np.ndarray) -> np.ndarray:
-        cross_cov_on_sqrt_z_cov = m_utils.matrix_right_divide(cross_cov, z_cov_predicted.T)
-        return m_utils.matrix_right_divide(cross_cov_on_sqrt_z_cov, z_cov_predicted)
+        cross_cov_on_sqrt_z_cov = m_utils.divide_inv(cross_cov, z_cov_predicted.T)
+        return m_utils.divide_inv(cross_cov_on_sqrt_z_cov, z_cov_predicted)
 
     def eval_z_cov_predicted(self, model: StateSpaceModel, w: np.ndarray, z_dev: np.ndarray) -> np.ndarray:
         sqrt_w = np.sqrt(np.abs(w))
@@ -758,8 +758,8 @@ class Cdkf(CentralDiffTransformFilter):
         # Correction (measurement update)
         cross_cov = x_cov_predicted_sqrt @ c[:, :x_dim].T
 
-        cross_cov_on_sqrt_z_cov = m_utils.matrix_right_divide(cross_cov, z_cov_predicted_sqrt.T)
-        filter_gain = m_utils.matrix_right_divide(cross_cov_on_sqrt_z_cov, z_cov_predicted_sqrt)
+        cross_cov_on_sqrt_z_cov = m_utils.divide_inv(cross_cov, z_cov_predicted_sqrt.T)
+        filter_gain = m_utils.divide_inv(cross_cov_on_sqrt_z_cov, z_cov_predicted_sqrt)
 
         innovation = model.innovation(observation, z_mean_predicted)
 
@@ -1092,8 +1092,8 @@ class SrCkf(Ckf):
         return sqrt_state_cov_new.T
 
     def eval_filter_gain(self, cross_cov: np.ndarray, z_cov_predicted: np.ndarray) -> np.ndarray:
-        cross_cov_on_sqrt_z_cov = m_utils.matrix_right_divide(cross_cov, z_cov_predicted.T)
-        return m_utils.matrix_right_divide(cross_cov_on_sqrt_z_cov, z_cov_predicted)
+        cross_cov_on_sqrt_z_cov = m_utils.divide_inv(cross_cov, z_cov_predicted.T)
+        return m_utils.divide_inv(cross_cov_on_sqrt_z_cov, z_cov_predicted)
 
     def eval_z_cov_predicted(self, model: StateSpaceModel, z: np.ndarray) -> np.ndarray:
         _, z_cov_predicted_sqrt = np.linalg.qr(np.hstack((z, model.observation_noise.covariance)).T)
@@ -1461,8 +1461,8 @@ class ResidualResampleStrategy(ResampleStrategy):
                     )
                 )
             )
-            j = 1
 
+            j = 0
             for i in range(residual_particles_count):
                 while u[i] > cum_dist[j]:
                     j += 1
@@ -1472,7 +1472,7 @@ class ResidualResampleStrategy(ResampleStrategy):
         index = 0
         for i in range(particles_count):
             if integer_weights_kind[i] > 0:
-                upper_index = int(index + integer_weights_kind[i] - 1)
+                upper_index = int(index + integer_weights_kind[i])
 
                 for j in range(index, upper_index):
                     out_index[j] = int(input_index[i])
@@ -1845,7 +1845,7 @@ class Gspf(PdfApproximationKalmanFilter):
             raise Exception("Estimate type '{0}' is not supported".format(self._estimate_type))
 
         idx = self.resample_mixture_components(n_components, gmi.n_components, x_weights_new)
-
+        print(idx)
         gmi.set_params(
             state_mean_new[idx, :],
             state_sqrt_cov_new[idx, :, :],

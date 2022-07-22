@@ -5,7 +5,7 @@ from abc import ABC, abstractmethod
 from typing import NoReturn, Tuple, Union
 
 import numpy as np
-from scipy.stats import gamma, multivariate_normal
+from scipy.stats import gamma, multivariate_normal, norm
 
 import bayesian_framework.shared.covariance_utils as cov_utils
 import utils.matrix_utils as matrix_utils

@@ -143,7 +143,7 @@ def get_locked_copy(arr: np.ndarray) -> np.ndarray:
     return result
 
 
-def matrix_right_divide(a: np.ndarray, b: np.ndarray) -> np.ndarray:
+def divide_inv(a: np.ndarray, b: np.ndarray) -> np.ndarray:
     """
     Solve linear equation
         x * a = b
@@ -156,7 +156,7 @@ def matrix_right_divide(a: np.ndarray, b: np.ndarray) -> np.ndarray:
     return x.T
 
 
-def matrix_left_divide(a: np.ndarray, b: np.ndarray) -> np.ndarray:
+def divide(a: np.ndarray, b: np.ndarray) -> np.ndarray:
     """
     Solve linear equation
         a * x = b
