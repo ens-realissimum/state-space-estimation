@@ -7,7 +7,7 @@ from typing import NoReturn, Tuple, Union
 import numpy as np
 from scipy.stats import gamma, multivariate_normal
 
-import bayesian_framework.shared.covariance_utils as cov_utils
+import bayesian_framework.core.covariance_utils as cov_utils
 import utils.matrix_utils as matrix_utils
 from .covariance_type import CovarianceType
 from .noise_type import NoiseType

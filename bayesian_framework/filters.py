@@ -10,12 +10,12 @@ import numpy as np
 from numpy.random import random
 from sklearn.mixture import GaussianMixture
 
-import bayesian_framework.shared.numerical_computations as num_computations
+import bayesian_framework.core.numerical_computations as num_computations
 import utils.matrix_utils as m_utils
 from bayesian_framework.inference.gssm import StateSpaceModel
 from bayesian_framework.inference.stochastic_models.covariance_type import CovarianceType
-from bayesian_framework.shared.gaussian_mixture_info import GaussianMixtureInfo
-from bayesian_framework.shared.linearization_type import LinearizationType
+from bayesian_framework.core.gaussian_mixture_info import GaussianMixtureInfo
+from bayesian_framework.core.linearization_type import LinearizationType
 
 
 def init_gmi(
@@ -142,7 +142,6 @@ class PdfApproximationKalmanFilter(ABC):
     def eval_final_state_estimate(self, data_set: BootstrapDataSet, model: StateSpaceModel) -> np.ndarray:
         if self._estimate_type is EstimateType.mean:
             return np.average(data_set.particles, weights=data_set.weights, axis=1)
-            # sum(np.tile(data_set.weights, (model.state_dim, 1)) * data_set.particles, axis=1)
         elif self._estimate_type is EstimateType.median:
             return np.median(np.tile(data_set.weights, (model.state_dim, 1)) * data_set.particles, axis=1)
         else:
@@ -1659,9 +1658,13 @@ class Pf(PdfApproximationKalmanFilter):
         particles_predicted = model.transition_func(data_set.particles, state_noise, ctrl_x)
 
         # Evaluate importance weights
-        likelihood = model.likelihood(np.tile(observation, (1, data_set.capacity)), particles_predicted, ctrl_z) + 1e-99
+        likelihood = model.likelihood(
+            np.tile(observation, (1, data_set.capacity)),
+            particles_predicted,
+            ctrl_z
+        ) + 1e-99
         weights = np.multiply(data_set.weights, likelihood)
-        weights /= np.sum(weights)
+        weights /= np.sum(weights, axis=1)
 
         data_set_updated = self._resample(BootstrapDataSet(particles_predicted, weights))
         estimate = self.eval_final_state_estimate(data_set_updated, model)

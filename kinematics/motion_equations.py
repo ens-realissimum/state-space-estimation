@@ -6,7 +6,7 @@ import numpy as np
 import quaternion as npq
 from scipy.integrate import solve_ivp
 
-from motions.models import KinematicState
+from kinematics.models import KinematicState
 from utils.matrix_utils import vect_to_quaternion
 
 

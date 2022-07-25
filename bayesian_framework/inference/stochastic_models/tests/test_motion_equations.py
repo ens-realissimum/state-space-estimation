@@ -2,8 +2,8 @@ import quaternion as npq
 import numpy as np
 from numpy.testing import assert_array_almost_equal
 
-from motions.models import KinematicState
-from motions.motion_equations import solve_kinematic_motion_equation
+from kinematics.models import KinematicState
+from kinematics.motion_equations import solve_kinematic_motion_equation
 
 
 def test_solve_kinematic_motion_equation():

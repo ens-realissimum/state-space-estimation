@@ -8,8 +8,8 @@ from scipy.constants import g
 from scipy.stats import norm
 
 from bayesian_framework.inference.stochastic_models.stochastic_processes import WienerProcessIterative
-from motions.angular_velocity_models import AngularVelocityProvider
-from motions.non_gravity_acceleration import NonGravityAccelerationProvider
+from kinematics.angular_velocity_models import AngularVelocityProvider
+from kinematics.non_gravity_acceleration import NonGravityAccelerationProvider
 from utils.matrix_utils import get_locked_copy
 
 

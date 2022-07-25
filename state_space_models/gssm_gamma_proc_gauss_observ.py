@@ -6,8 +6,8 @@ import bayesian_framework.inference.stochastic_models.stochastic_models as sm
 from bayesian_framework.inference.gssm import StateSpaceModel
 from bayesian_framework.inference.stochastic_models.covariance_type import CovarianceType
 from bayesian_framework.inference.stochastic_models.noise_type import NoiseType
-from bayesian_framework.shared.covariance_adapdation import CovarianceMatrixAdaptation
-from bayesian_framework.shared.linearization_type import LinearizationType
+from bayesian_framework.core.covariance_adapdation import CovarianceMatrixAdaptation
+from bayesian_framework.core.linearization_type import LinearizationType
 
 
 class GammaProcessWithGaussianObservationGssm(StateSpaceModel):

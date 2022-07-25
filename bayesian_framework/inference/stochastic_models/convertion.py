@@ -2,7 +2,7 @@ from typing import Union
 
 import bayesian_framework.inference.stochastic_models.stochastic_models as sm
 from bayesian_framework.inference.stochastic_models.covariance_type import CovarianceType
-from bayesian_framework.shared.covariance_utils import to_covariance_with_type
+from bayesian_framework.core.covariance_utils import to_covariance_with_type
 
 GaussNoise = Union[sm.GaussianStochasticModel, sm.GaussianMixtureStochasticModel]
 

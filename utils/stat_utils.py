@@ -11,7 +11,9 @@ def stat_errors(delta_list: np.ndarray) -> Tuple[np.ndarray, np.ndarray, np.ndar
     """
     mean = np.mean(delta_list, axis=0)
     std = np.std(delta_list, axis=0)
-    rmse = np.mean(delta_list ** 2, axis=0) ** 0.5
+    rmse = np.sqrt(
+        np.mean(np.power(delta_list, 2), axis=0)
+    )
 
     return mean, std, rmse
 

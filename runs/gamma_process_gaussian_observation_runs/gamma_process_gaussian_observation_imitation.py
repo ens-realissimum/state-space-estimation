@@ -8,7 +8,7 @@ from bayesian_framework.inference.inference_model_generator import build_filtera
 from bayesian_framework.inference.stochastic_models.covariance_type import CovarianceType
 from bayesian_framework.inference.stochastic_models.noise_type import NoiseType
 from bayesian_framework.inference.stochastic_models.stochastic_models import build_stochastic_process
-from bayesian_framework.state_space_models import gssm_gamma_proc_gauss_observ as gamma_gssm
+from state_space_models import gssm_gamma_proc_gauss_observ as gamma_gssm
 from utils.stat_utils import stat_errors
 
 
@@ -50,7 +50,7 @@ def run():
             u2 = np.asarray(range(1, data_points_count + 1))
 
             x_est = np.zeros((inference_model.state_dim, data_points_count))
-            x_est[:, 0] = 1
+            x_est[:, 0] = 3
             x_cov_est = 3 / 4 * np.eye(inference_model.state_dim)
 
             if is_sigma_point_filter(filter_type) or is_linear_kalman_filter(filter_type):
@@ -89,9 +89,9 @@ def run():
 
             elif filter_type is BayesianFilterType.pf:
                 resample_strategy = bf.ResampleStrategy.resolve(bf.ResampleType.residual)
-                pf = bf.Pf(resample_threshold=0.001, resample_strategy=resample_strategy)
-                n_particles = int(1e5)
-                particles = np.atleast_2d(multivariate_normal.rvs(x_est[:, 0], x_cov_est, n_particles))
+                pf = bf.Pf(resample_threshold=0.1, resample_strategy=resample_strategy)
+                n_particles = int(2e4)
+                particles = np.atleast_2d(multivariate_normal.rvs(x_est[:, 0], size=n_particles))
                 weights = np.tile(1 / n_particles, n_particles)
                 data_set = bf.BootstrapDataSet(particles, weights)
 

@@ -4,7 +4,7 @@ import numpy as np
 from sklearn.mixture import GaussianMixture
 
 from bayesian_framework.inference.stochastic_models.covariance_type import CovarianceType
-from bayesian_framework.shared.covariance_utils import to_covariance_with_type
+from bayesian_framework.core.covariance_utils import to_covariance_with_type
 
 
 class GaussianMixtureInfo:

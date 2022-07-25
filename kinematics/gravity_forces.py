@@ -7,8 +7,8 @@ import numpy as np
 from scipy import constants as sc_const
 from scipy.integrate import solve_ivp
 
-from motions.models import KinematicState
-from motions.motion_equations import uniform_acceleration_motion_equation
+from kinematics.models import KinematicState
+from kinematics.motion_equations import uniform_acceleration_motion_equation
 
 
 class CelestialBodyGravityInfo:

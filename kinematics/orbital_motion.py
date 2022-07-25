@@ -2,7 +2,7 @@ from typing import Tuple
 
 import numpy as np
 
-from motions.models import KinematicState
+from kinematics.models import KinematicState
 
 
 def eval_earth_non_spherical_influence(state: KinematicState) -> np.ndarray:

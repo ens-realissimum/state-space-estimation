@@ -8,8 +8,8 @@ import numpy as np
 
 import bayesian_framework.inference.stochastic_models.stochastic_models as sm
 from bayesian_framework.inference.stochastic_models.stochastic_models import GaussianStochasticModel, GeneralStochasticModel
-from bayesian_framework.shared.covariance_adapdation import CovarianceMatrixAdaptation
-from bayesian_framework.shared.linearization_type import LinearizationType
+from bayesian_framework.core.covariance_adapdation import CovarianceMatrixAdaptation
+from bayesian_framework.core.linearization_type import LinearizationType
 
 
 class StateSpaceModel(ABC):

@@ -4,8 +4,8 @@ import numpy as np
 import quaternion as npq
 from numpy.testing import assert_array_almost_equal
 
-from motions.gravity_forces import CelestialBodyGravityInfo, NBodyProblemGravityAccelerationProvider
-from motions.models import KinematicState
+from kinematics.gravity_forces import CelestialBodyGravityInfo, NBodyProblemGravityAccelerationProvider
+from kinematics.models import KinematicState
 
 
 class RigidBodyData:
