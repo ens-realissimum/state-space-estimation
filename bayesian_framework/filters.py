@@ -1743,8 +1743,8 @@ class Gspf(PdfApproximationKalmanFilter):
             gmi: GaussianMixtureInfo,
             observation: np.ndarray,
             model: StateSpaceModel,
-            ctrl_x: Optional[np.ndarray],
-            ctrl_z: Optional[np.ndarray]
+            u_x: Optional[np.ndarray],
+            u_z: Optional[np.ndarray]
     ) -> Tuple[np.ndarray, GaussianMixtureInfo]:
         """
         Estimates state mean (x(k))of dynamic system at time k based on noisy observations starting at time k (z(k)).
@@ -1758,8 +1758,8 @@ class Gspf(PdfApproximationKalmanFilter):
         :param observation: noisy observations starting at time k, i.e. z(k).
         :param model: inference state space model, which fully describes filtration issue (evolution of state, relation between state and
             observation, state noise, observation noise, etc).
-        :param ctrl_x: exogenous input to state transition function starting at time k-1, i.e. u1(k-1).
-        :param ctrl_z: exogenous input to state observation function starting at time k, i.e. u2(k).
+        :param u_x: exogenous input to state transition function starting at time k-1, i.e. u1(k-1).
+        :param u_z: exogenous input to state observation function starting at time k, i.e. u2(k).
         :return: tuple of following elements:
             estimate: np array, estimates of state at time k, i.e. E[x(t)|z(1), z(2), ..., z(t)] for t = k;
             data_set: BootstrapDataSet, updated Particle filter data structure. Contains set of particles
@@ -1784,7 +1784,7 @@ class Gspf(PdfApproximationKalmanFilter):
             for g in range(gmi.n_components):
                 gk = g + k * gmi.n_components
                 x_noise_buf = model.state_noise.covariance[k, :, :] @ noise_buf[gk, :, :] + mean_k
-                x_predicted_buf[gk, :, :] = model.transition_func(x_current_buf[g, :, :], x_noise_buf, ctrl_x)
+                x_predicted_buf[gk, :, :] = model.transition_func(x_current_buf[g, :, :], x_noise_buf, u_x)
                 x_weights_new[gk] = gmi.weights[g] * model.state_noise.weights[k]
 
         x_weights_new /= np.sum(x_weights_new)
@@ -1804,7 +1804,7 @@ class Gspf(PdfApproximationKalmanFilter):
         for g in range(n_components):
             mean_component_g = np.tile(state_mean_new[g, :], (1, self._n_samples))
             x_buf[g, :, :] = state_sqrt_cov_new[g, :, :] @ noise_buf[g, :, :] + mean_component_g
-            importance_w[g, :] = model.likelihood(obs, x_buf[g, :, :], ctrl_z) + sys.float_info.epsilon
+            importance_w[g, :] = model.likelihood(obs, x_buf[g, :, :], u_z) + sys.float_info.epsilon
 
         weight_norm = 0
         for g in range(n_components):

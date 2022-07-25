@@ -41,16 +41,16 @@ def run():
             x_noise = gssm_model.state_noise.sample(data_points_count)
             z_noise = gssm_model.observation_noise.sample(data_points_count)
 
+            u_x = np.asarray(range(data_points_count))  # state control vector
+            u_z = np.asarray(range(1, data_points_count + 1))  # observation control vector
+
             z[0] = gssm_model.observation_func(x[:, 0], z_noise[:, 0], np.asarray([1]))
             for j in range(1, data_points_count):
-                x[:, j] = gssm_model.transition_func(x[:, j - 1], x_noise[:, j - 1], np.asarray([j]))
-                z[:, j] = gssm_model.observation_func(x[:, j], z_noise[:, j], np.asarray([j]))
-
-            u1 = np.asarray(range(data_points_count))
-            u2 = np.asarray(range(1, data_points_count + 1))
+                x[:, j] = gssm_model.transition_func(x[:, j - 1], x_noise[:, j - 1], u_x[j - 1])
+                z[:, j] = gssm_model.observation_func(x[:, j], z_noise[:, j], u_z[j])
 
             x_est = np.zeros((inference_model.state_dim, data_points_count))
-            x_est[:, 0] = 3
+            x_est[:, 0] = 2
             x_cov_est = 3 / 4 * np.eye(inference_model.state_dim)
 
             if is_sigma_point_filter(filter_type) or is_linear_kalman_filter(filter_type):
@@ -85,7 +85,7 @@ def run():
                     x_cov_est = np.linalg.cholesky(x_cov_est)
 
                 for k in range(1, data_points_count):
-                    x_est[:, k], x_cov_est, _ = spkf.estimate(x_est[:, k - 1], x_cov_est, z[:, k], inference_model, u1[k - 1], u2[k])
+                    x_est[:, k], x_cov_est, _ = spkf.estimate(x_est[:, k - 1], x_cov_est, z[:, k], inference_model, u_x[k - 1], u_z[k])
 
             elif filter_type is BayesianFilterType.pf:
                 resample_strategy = bf.ResampleStrategy.resolve(bf.ResampleType.residual)
@@ -96,7 +96,7 @@ def run():
                 data_set = bf.BootstrapDataSet(particles, weights)
 
                 for k in range(1, data_points_count):
-                    x_est[:, k], data_set = pf.estimate(data_set, z[:, k], inference_model, u1[k - 1], u2[k])
+                    x_est[:, k], data_set = pf.estimate(data_set, z[:, k], inference_model, u_x[k - 1], u_z[k])
             elif filter_type is BayesianFilterType.gspf:
                 n_particles = int(1e4)
                 n_mixture = 4
@@ -120,7 +120,7 @@ def run():
                 gspf = bf.Gspf(0.0001, n_particles, resample_strategy=resample_strategy)
                 gmi = bf.init_gmi(x_est[:, 0], gmm_inference_model.state_dim, n_particles, n_mixture)
                 for k in range(1, data_points_count):
-                    x_est[:, k], gmi = gspf.estimate(gmi, z[:, k], gmm_inference_model, u1[k - 1], u2[k])
+                    x_est[:, k], gmi = gspf.estimate(gmi, z[:, k], gmm_inference_model, u_x[k - 1], u_z[k])
             else:
                 raise Exception(f"Not supported filter type: {filter_type.name}")
 
