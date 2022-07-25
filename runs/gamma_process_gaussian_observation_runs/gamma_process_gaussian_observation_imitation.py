@@ -18,7 +18,7 @@ def run():
     # todo: fix generate_sparse_gauss_hermite_points
     # sgh_points, sgh_weights = num_cmp.generate_sparse_gauss_hermite_points(2, 3, 2)
 
-    filter_types = [BayesianFilterType.gspf]  # todo: fix sghqf
+    filter_types = [BayesianFilterType.pf]  # todo: fix sghqf
     # [kf, ekf, ukf, srukf, cdkf, srcdkf, ckf, srckf, fdckf, cqkf, ghqf, sghqf, pf, gspf, sppf, gmsppf  ]
 
     number_of_runs = 100  # 500
@@ -89,8 +89,8 @@ def run():
 
             elif filter_type is BayesianFilterType.pf:
                 resample_strategy = bf.ResampleStrategy.resolve(bf.ResampleType.residual)
-                pf = bf.Pf(0.1, resample_strategy=resample_strategy)
-                n_particles = int(1e3)
+                pf = bf.Pf(resample_threshold=0.001, resample_strategy=resample_strategy)
+                n_particles = int(1e5)
                 particles = np.atleast_2d(multivariate_normal.rvs(x_est[:, 0], x_cov_est, n_particles))
                 weights = np.tile(1 / n_particles, n_particles)
                 data_set = bf.BootstrapDataSet(particles, weights)

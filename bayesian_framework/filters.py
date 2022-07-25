@@ -141,7 +141,8 @@ class PdfApproximationKalmanFilter(ABC):
 
     def eval_final_state_estimate(self, data_set: BootstrapDataSet, model: StateSpaceModel) -> np.ndarray:
         if self._estimate_type is EstimateType.mean:
-            return np.sum(np.tile(data_set.weights, (model.state_dim, 1)) * data_set.particles, axis=1)
+            return np.average(data_set.particles, weights=data_set.weights, axis=1)
+            # sum(np.tile(data_set.weights, (model.state_dim, 1)) * data_set.particles, axis=1)
         elif self._estimate_type is EstimateType.median:
             return np.median(np.tile(data_set.weights, (model.state_dim, 1)) * data_set.particles, axis=1)
         else:
@@ -1438,7 +1439,7 @@ class ResidualResampleStrategy(ResampleStrategy):
         return "Residual resample algorithm"
 
     def resample(self, weights: np.ndarray) -> np.ndarray:
-        particles_count = len(weights)
+        particles_count = weights.size
         input_index = range(particles_count)
 
         out_index = np.zeros(particles_count, dtype=int)
@@ -1659,7 +1660,7 @@ class Pf(PdfApproximationKalmanFilter):
 
         # Evaluate importance weights
         likelihood = model.likelihood(np.tile(observation, (1, data_set.capacity)), particles_predicted, ctrl_z) + 1e-99
-        weights = data_set.weights * likelihood
+        weights = np.multiply(data_set.weights, likelihood)
         weights /= np.sum(weights)
 
         data_set_updated = self._resample(BootstrapDataSet(particles_predicted, weights))
@@ -1668,13 +1669,14 @@ class Pf(PdfApproximationKalmanFilter):
         return estimate, data_set_updated
 
     def _resample(self, data_set: BootstrapDataSet) -> BootstrapDataSet:
-        resample_threshold = round(self._resample_threshold * data_set.capacity)
-        effective_size = 1 / np.sum((data_set.weights ** 2))
+        resample_threshold = np.round(self._resample_threshold * data_set.capacity)
+        effective_size = 1 / np.sum(np.power(data_set.weights, 2), axis=1)
 
         if effective_size >= resample_threshold:
             return BootstrapDataSet(data_set.particles, data_set.weights)
 
-        out_index = self._resample_strategy.resample(data_set.weights)
+        weights_flat = np.array(data_set.weights).flatten()
+        out_index = self._resample_strategy.resample(weights_flat)
         particles = data_set.particles[:, out_index]
         weights = np.tile(1 / data_set.capacity, data_set.capacity)
         return BootstrapDataSet(particles, weights)
@@ -1787,8 +1789,8 @@ class Gspf(PdfApproximationKalmanFilter):
         for g in range(n_components):
             mean_component_g = np.sum(x_predicted_buf[g, :, :], 1) / self._n_samples
             state_mean_new[g, :] = mean_component_g
-            x_diff = x_predicted_buf[g, :, :] - np.tile(mean_component_g, (1, self._n_samples))
-            _, cov_sqrt_g = np.linalg.qr(x_diff.T)
+            x_p_dev = x_predicted_buf[g, :, :] - np.tile(mean_component_g, (1, self._n_samples))
+            _, cov_sqrt_g = np.linalg.qr(x_p_dev.T)
             state_sqrt_cov_new[g, :, :] = np.transpose(cov_sqrt_g) / np.sqrt(self._n_samples - 1)
 
         # Observation / measurement update (correction)
@@ -1804,22 +1806,24 @@ class Gspf(PdfApproximationKalmanFilter):
         weight_norm = 0
         for g in range(n_components):
             tmp_w = importance_w[g, :]
-            tmp_weights_cum = np.sum(tmp_w)
+            weights_cum_g = np.sum(tmp_w)
             mean_component_g = np.sum(
-                np.tile(tmp_w, (model.state_dim, 1)) * x_buf[g, :, :], 1
-            ) / tmp_weights_cum
-
+                np.multiply(
+                    np.tile(tmp_w, (model.state_dim, 1)),
+                    x_buf[g, :, :]
+                ),
+                axis=1
+            ) / weights_cum_g
             state_mean_new[g, :] = mean_component_g
 
+            mean_component_g_v = np.tile(mean_component_g, (1, self._n_samples))
             w = np.tile(np.sqrt(tmp_w), (model.state_dim, 1))
-            x_diff = np.transpose(
-                (w * (x_buf[g, :, :] - np.tile(mean_component_g, (1, self._n_samples))))
-            )
-            _, cov_sqrt_g = np.linalg.qr(x_diff)
-            state_sqrt_cov_new[g, :, :] = cov_sqrt_g.T / np.sqrt(tmp_weights_cum)
+            x_n_dev = np.multiply(w, x_buf[g, :, :] - mean_component_g_v)
+            _, cov_sqrt_g = np.linalg.qr(x_n_dev.T)
+            state_sqrt_cov_new[g, :, :] = cov_sqrt_g.T / np.sqrt(weights_cum_g)
 
-            x_weights_new[g] *= tmp_weights_cum
-            weight_norm += tmp_weights_cum
+            x_weights_new[g] *= weights_cum_g
+            weight_norm += weights_cum_g
 
         x_weights_new /= weight_norm
         x_weights_new /= np.sum(x_weights_new)
@@ -1827,10 +1831,10 @@ class Gspf(PdfApproximationKalmanFilter):
         if self._estimate_type is EstimateType.mean:
             estimate = np.sum(
                 np.multiply(
-                    np.repeat(np.matrix(x_weights_new), model.state_dim, 0),
+                    np.repeat(x_weights_new, model.state_dim, 0),
                     np.matrix(state_mean_new).T
                 ),
-                1
+                axis=1
             )
         else:
             raise Exception(f"Estimate type '{self._estimate_type}' is not supported")
