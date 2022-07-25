@@ -1,4 +1,4 @@
-from runs.gamma_process_gaussian_observation_runs import gamma_process_gaussian_observation_imitation
+from runs import gamma_process_gaussian_observation_imitation
 
 gamma_process_gaussian_observation_imitation.run()
 

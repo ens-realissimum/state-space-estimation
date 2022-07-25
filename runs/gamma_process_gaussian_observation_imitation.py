@@ -4,6 +4,7 @@ from scipy.stats import multivariate_normal
 
 import bayesian_framework.filters as bf
 from bayesian_framework.bayesian_filter_type import BayesianFilterType, is_linear_kalman_filter, is_sigma_point_filter, is_sqrt_sigma_point_filter
+from bayesian_framework.core.numerical_computations import generate_sparse_gauss_hermite_points
 from bayesian_framework.inference.inference_model_generator import build_filterable_model
 from bayesian_framework.inference.stochastic_models.covariance_type import CovarianceType
 from bayesian_framework.inference.stochastic_models.noise_type import NoiseType
@@ -16,9 +17,9 @@ def run():
     np.random.seed(42)  # TODO: DEBUG ONLY
     # todo: check dim of return between different numeric methods
     # todo: fix generate_sparse_gauss_hermite_points
-    # sgh_points, sgh_weights = num_cmp.generate_sparse_gauss_hermite_points(2, 3, 2)
+    # sgh_points, sgh_weights = generate_sparse_gauss_hermite_points(2, 3, 2)
 
-    filter_types = [BayesianFilterType.pf]  # todo: fix sghqf
+    filter_types = [BayesianFilterType.gspf]  # todo: fix sghqf
     # [kf, ekf, ukf, srukf, cdkf, srcdkf, ckf, srckf, fdckf, cqkf, ghqf, sghqf, pf, gspf, sppf, gmsppf  ]
 
     number_of_runs = 100  # 500
@@ -102,22 +103,22 @@ def run():
                 n_mixture = 4
                 initial_cov = np.squeeze(inference_model.state_noise.covariance)
                 gm_cov = np.zeros((4, 1, 1))
-                gm_cov[0, :, :] = 2 * initial_cov
-                gm_cov[1, :, :] = 0.58 * initial_cov
-                gm_cov[2, :, :] = 1.5 * initial_cov
-                gm_cov[3, :, :] = 1.25 * initial_cov
+                gm_cov[0, :, :] = 1.75 * initial_cov
+                gm_cov[1, :, :] = .05 * initial_cov
+                gm_cov[2, :, :] = 0.85 * initial_cov
+                gm_cov[3, :, :] = 2.5 * initial_cov
                 gm_state_noise = build_stochastic_process(
                     NoiseType.gaussian_mixture,
                     mixture_size=n_mixture,
                     mean=np.tile(np.asarray(np.squeeze(inference_model.state_noise.mean)), (n_mixture, 1)),
                     covariance=gm_cov,
                     covariance_type=inference_model.state_noise.covariance_type,
-                    weights=np.asarray([0.25, 0.25, 0.25, 0.25])
+                    weights=.25*np.ones(4)
                 )
                 gmm_inference_model = inference_model.set_state_noise(gm_state_noise)
 
                 resample_strategy = bf.ResampleStrategy.resolve(bf.ResampleType.residual)
-                gspf = bf.Gspf(0.0001, n_particles, resample_strategy=resample_strategy)
+                gspf = bf.Gspf(n_particles, resample_strategy=resample_strategy)
                 gmi = bf.init_gmi(x_est[:, 0], gmm_inference_model.state_dim, n_particles, n_mixture)
                 for k in range(1, data_points_count):
                     x_est[:, k], gmi = gspf.estimate(gmi, z[:, k], gmm_inference_model, u_x[k - 1], u_z[k])

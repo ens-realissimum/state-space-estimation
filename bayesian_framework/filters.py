@@ -1722,19 +1722,16 @@ class Gspf(PdfApproximationKalmanFilter):
 
     def __init__(
             self,
-            resample_threshold: float,
             n_samples: int,
             estimate_type: Union[EstimateType, None] = None,
             resample_strategy: Union[ResampleStrategy, None] = None
     ):
         super().__init__(estimate_type)
-        self._resample_threshold = resample_threshold
         self._n_samples = n_samples
         self._resample_strategy = resample_strategy if resample_strategy is not None else ResidualResampleStrategy()
 
     def __str__(self):
-        return f"Resample threshold: {self._resample_threshold}; " \
-               f"Estimate type: {self._estimate_type}; " \
+        return f"Estimate type: {self._estimate_type}; " \
                f"Resampling method: {self._resample_strategy}; " \
                f"Particles count: {self._n_samples}"
 
