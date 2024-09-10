@@ -4,7 +4,7 @@ from scipy.stats import multivariate_normal
 
 import bayesian_framework.filters as bf
 from bayesian_framework.bayesian_filter_type import BayesianFilterType, is_linear_kalman_filter, is_sigma_point_filter, is_sqrt_sigma_point_filter
-from bayesian_framework.core.numerical_computations import generate_sparse_gauss_hermite_points
+from bayesian_framework.core.numerical_computations import generate_sparse_gauss_hermite_set
 from bayesian_framework.inference.inference_model_generator import build_filterable_model
 from bayesian_framework.inference.stochastic_models.covariance_type import CovarianceType
 from bayesian_framework.inference.stochastic_models.noise_type import NoiseType
@@ -17,9 +17,9 @@ def run():
     np.random.seed(42)  # TODO: DEBUG ONLY
     # todo: check dim of return between different numeric methods
     # todo: fix generate_sparse_gauss_hermite_points
-    # sgh_points, sgh_weights = generate_sparse_gauss_hermite_points(2, 3, 2)
+    sgh_points, sgh_weights = generate_sparse_gauss_hermite_set(2, 3, 2)
 
-    filter_types = [BayesianFilterType.gspf]  # todo: fix sghqf
+    filter_types = [BayesianFilterType.sghqf]  # todo: fix sghqf
     # [kf, ekf, ukf, srukf, cdkf, srcdkf, ckf, srckf, fdckf, cqkf, ghqf, sghqf, pf, gspf, sppf, gmsppf  ]
 
     number_of_runs = 100  # 500
@@ -131,7 +131,7 @@ def run():
                 ax_a.plot(np.squeeze(x_est), linewidth=2.0, label=f"{filter_type.name} estimate")
                 ax_a.grid(True, which="both", axis="both")
                 ax_a.legend(loc="upper right")
-                ax_a.set_title(f"{filter_type.name}: Nonlinear Time Variant State Estimation \n (non Gaussian noise)", fontsize=12)
+                ax_a.set_title("{filter_type.name}: Nonlinear Time Variant State Estimation \n (non Gaussian noise)", fontsize=12)
                 plt.tight_layout()
                 fig_a.set_size_inches(8, 6)
                 fig_a.show()

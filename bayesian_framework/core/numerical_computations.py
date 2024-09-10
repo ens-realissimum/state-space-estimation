@@ -285,7 +285,7 @@ def generate_next_index_sparse_gauss_hermite_rule(accuracy_level: int, index: np
 
 def generate_index_sparse_gauss_hermite_rule(accuracy_level: int, dimension: int) -> np.ndarray:
     n_index = generate_next_index_sparse_gauss_hermite_rule(accuracy_level, np.ones(dimension), np.asarray([]))
-    nn_index = np.hstack((np.ones((dimension, 1)), n_index))
+    nn_index = np.vstack((np.ones((1, dimension)), n_index))
 
     while True:
         tmp_index = []
@@ -358,7 +358,15 @@ def generate_sparse_gauss_hermite_point(
     return np.atleast_2d(points), np.atleast_1d(weights)
 
 
-def generate_sparse_gauss_hermite_points(accuracy_level: int, dimension: int, manner: int) -> Tuple[np.ndarray, np.ndarray]:
+@lru_cache()
+def generate_sparse_gauss_hermite_set(accuracy_level: int, dimension: int, manner: int) -> Tuple[np.ndarray, np.ndarray]:
+    accuracy_level_sequences_set = {}
+    for q in range(accuracy_level - dimension, accuracy_level - 1):
+        if q <= 0:
+            accuracy_level_sequences_set[q] = []
+        else:
+            accuracy_level_sequence = []
+
     index_set = generate_index_sparse_gauss_hermite_rule(accuracy_level, dimension)
 
     points = np.asarray([])
