@@ -10,7 +10,7 @@ numpy-typing-compat==20251206.2.4
 optype==0.16.0
 packaging==24.1
 pandas==3.0.1
-pillow==10.4.0
+pillow==12.1.1
 pluggy==1.6.0
 Pygments==2.19.2
 pyparsing==3.1.2
