@@ -210,7 +210,7 @@ class GaussianStochasticModel(GeneralStochasticModel):
         return self._mean
 
     def sample(self, size: int) -> np.ndarray:
-        return np.asarray(
+        return np.atleast_2d(
             multivariate_normal.rvs(mean=self._mean, cov=self._covariance_full, size=size).T
         )
 
