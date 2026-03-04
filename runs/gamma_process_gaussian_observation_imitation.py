@@ -14,16 +14,16 @@ from utils.stat_utils import stat_errors
 
 
 def run():
-    np.random.seed(42)  # TODO: DEBUG ONLY
+    # np.random.seed(42)  # TODO: DEBUG ONLY
     # todo: check dim of return between different numeric methods
     # todo: fix generate_sparse_gauss_hermite_points
-    sgh_points, sgh_weights = generate_sparse_gauss_hermite_set(2, 3, 2)
+    # sgh_points, sgh_weights = generate_sparse_gauss_hermite_set(2, 3, 2)
 
-    filter_types = [BayesianFilterType.sghqf]  # todo: fix sghqf
+    filter_types = [BayesianFilterType.ukf]  # todo: fix sghqf
     # [kf, ekf, ukf, srukf, cdkf, srcdkf, ckf, srckf, fdckf, cqkf, ghqf, sghqf, pf, gspf, sppf, gmsppf  ]
 
-    number_of_runs = 100  # 500
-    data_points_count = 50  # kf and ekf works only when <= 30
+    number_of_runs = 500  # 500
+    data_points_count = 200  # kf and ekf works only when <= 30
     draw_iterations = True
     err_arr = np.zeros((number_of_runs, data_points_count - 1))
 
@@ -102,18 +102,18 @@ def run():
                 n_particles = int(1e4)
                 n_mixture = 4
                 initial_cov = np.squeeze(inference_model.state_noise.covariance)
-                gm_cov = np.zeros((4, 1, 1))
+                gm_cov = np.zeros((n_mixture, 1, 1))
                 gm_cov[0, :, :] = 1.75 * initial_cov
                 gm_cov[1, :, :] = .05 * initial_cov
                 gm_cov[2, :, :] = 0.85 * initial_cov
-                gm_cov[3, :, :] = 2.5 * initial_cov
+                gm_cov[3, :, :] = 2.25 * initial_cov
                 gm_state_noise = build_stochastic_process(
                     NoiseType.gaussian_mixture,
                     mixture_size=n_mixture,
                     mean=np.tile(np.asarray(np.squeeze(inference_model.state_noise.mean)), (n_mixture, 1)),
                     covariance=gm_cov,
                     covariance_type=inference_model.state_noise.covariance_type,
-                    weights=.25*np.ones(4)
+                    weights=1/n_mixture*np.ones(n_mixture)
                 )
                 gmm_inference_model = inference_model.set_state_noise(gm_state_noise)
 
@@ -131,7 +131,7 @@ def run():
                 ax_a.plot(np.squeeze(x_est), linewidth=2.0, label=f"{filter_type.name} estimate")
                 ax_a.grid(True, which="both", axis="both")
                 ax_a.legend(loc="upper right")
-                ax_a.set_title("{filter_type.name}: Nonlinear Time Variant State Estimation \n (non Gaussian noise)", fontsize=12)
+                ax_a.set_title(f"{filter_type.name}: Nonlinear Time Variant State Estimation \n (non Gaussian noise)", fontsize=12)
                 plt.tight_layout()
                 fig_a.set_size_inches(8, 6)
                 fig_a.show()

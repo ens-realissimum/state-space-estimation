@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-import collections
+from collections.abc import Sequence
 from abc import ABC, abstractmethod
 from typing import NoReturn, Tuple, Union
 
@@ -98,8 +98,8 @@ class GeneralStochasticModel(ABC):
 
 class GammaStochasticModel(GeneralStochasticModel):
     def __init__(self, *, shape, scale):
-        is_shape_list = isinstance(shape, collections.Sequence)
-        is_scale_list = isinstance(scale, collections.Sequence)
+        is_shape_list = isinstance(shape, Sequence)
+        is_scale_list = isinstance(scale, Sequence)
 
         if is_shape_list and is_scale_list:
             if len(shape) != len(scale):
@@ -161,7 +161,7 @@ class GammaStochasticModel(GeneralStochasticModel):
 
 class GaussianStochasticModel(GeneralStochasticModel):
     def __init__(self, *, mean, covariance, covariance_type):
-        if isinstance(mean, collections.Sequence):
+        if isinstance(mean, Sequence):
             if not matrix_utils.is_square_2d_array(covariance):
                 raise Exception("Covariance matrix must be square matrix")
 

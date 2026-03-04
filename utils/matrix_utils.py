@@ -1,7 +1,7 @@
 from typing import Iterable, Union
 
 import numpy as np
-import quaternion as npq
+from utils.quaternion_utils import Quaternion, quaternion
 
 
 def ensure_positive_semi_definite(matrix: np.matrix) -> np.ndarray:
@@ -123,13 +123,13 @@ def get_shape_at(array: np.ndarray, axis: int, default: Union[int, None] = None)
     return default if shape_item is None else shape_item
 
 
-def vect_to_quaternion(vect: np.ndarray) -> npq.quaternion:
+def vect_to_quaternion(vect: np.ndarray) -> Quaternion:
     """
     Convert 3D vector to quaternion representation.
     :param vect: 3D vector (with components x, y, z)
     :return: quaternion representation of input vector
     """
-    return npq.quaternion(0, vect[0], vect[1], vect[2])
+    return quaternion(0, vect[0], vect[1], vect[2])
 
 
 def get_locked_copy(arr: np.ndarray) -> np.ndarray:
